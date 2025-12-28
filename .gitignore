@@ -1,6 +1,7 @@
 # ========================
 # Qt Creator user files
 # ========================
+.qtcreator
 *.pro.user
 *.pro.user.*
 *.qbs.user
@@ -64,3 +65,38 @@ Thumbs.db
 # Logs
 # ========================
 *.log
+
+# ========================
+# Qt Creator / Qt tools
+# ========================
+.qt/
+.qtc/
+.qtc_clangd/
+.qtcreator/
+.qtcsettings.cmake
+
+# ========================
+# CMake generated
+# ========================
+.cmake/
+*_autogen/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# ========================
+# Build outputs / binaries
+# ========================
+*/untitled
+*.exe
+*.dll
+*.so
+*.app
+
+# ========================
+# Qt Creator user files
+# ========================
+*.pro.user*
+
+*/qtcsettings.cmake
