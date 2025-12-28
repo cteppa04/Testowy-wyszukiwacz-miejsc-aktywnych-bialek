@@ -32,6 +32,14 @@ CMakeFiles/
 cmake_install.cmake
 Makefile
 
+# CMake cache and build artifacts
+CMakeCache.txt
+CMakeCache.txt.prev
+CMakeFiles/
+cmake_install.cmake
+Makefile
+build-*/
+
 # ========================
 # Object files
 # ========================
