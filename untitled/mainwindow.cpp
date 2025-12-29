@@ -2,6 +2,8 @@
 #include "./ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
+#include <classes/Atom.h>
+#include "functions/parsePDB.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +20,11 @@ MainWindow::~MainWindow()
 void MainWindow::on_fileButton_clicked()
 {
     QString file_name = QFileDialog::getOpenFileName(this,"Wybierz plik grubasie","C://");
-    QMessageBox::information(this,"..",file_name);
+    QVector<Atom> atomy = parsePDB(file_name);
+    QString allAtomsString;
+    for(const Atom &x : atomy){
+        allAtomsString += QString::number(x.serial)+": " + x.element;
+    }
+    QMessageBox::information(this,"..",allAtomsString);
 }
 

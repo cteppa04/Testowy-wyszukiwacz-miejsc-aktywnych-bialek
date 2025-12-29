@@ -25,6 +25,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         ${PROJECT_SOURCES}
         classes/Atom.h classes/Atom.cpp
         classes/Bialko.h classes/Bialko.cpp
+        functions/parsePDB.cpp
+        functions/parsePDB.h
 
     )
 # Define target properties for Android with Qt 6 as:
@@ -44,6 +46,11 @@ else()
         )
     endif()
 endif()
+
+target_include_directories(untitled
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 target_link_libraries(untitled PRIVATE Qt${QT_VERSION_MAJOR}::Widgets)
 
