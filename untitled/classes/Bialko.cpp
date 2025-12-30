@@ -1,3 +1,3 @@
-#include "Bialko.h"
+#include "bialko.h"
 
 Bialko::Bialko() {}

@@ -3,7 +3,7 @@
 
 #include <QVector>
 #include <QString>
-#include "classes/Atom.h"
+#include "classes/atom.h"
 
 QVector<Atom> parsePDB(const QString &filePath);
 

@@ -23,10 +23,11 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(untitled
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        classes/Atom.h classes/Atom.cpp
-        classes/Bialko.h classes/Bialko.cpp
+        classes/atom.h classes/atom.cpp
+        classes/bialko.h classes/bialko.cpp
         functions/parsePDB.cpp
         functions/parsePDB.h
+        windows/visualizationwindow.h windows/visualizationwindow.cpp windows/visualizationwindow.ui
 
     )
 # Define target properties for Android with Qt 6 as:
