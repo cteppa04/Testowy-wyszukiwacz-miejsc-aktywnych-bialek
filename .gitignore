@@ -1,0 +1,111 @@
+# ========================
+# Qt Creator user files
+# ========================
+.qtcreator
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+*.qmlproject.user
+*.qmlproject.user.*
+
+# ========================
+# Build directories
+# ========================
+build-*/
+cmake-build-*/
+out/
+build/
+
+# ========================
+# Generated files
+# ========================
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+
+# ========================
+# CMake files (generated)
+# ========================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# CMake cache and build artifacts
+CMakeCache.txt
+CMakeCache.txt.prev
+CMakeFiles/
+cmake_install.cmake
+Makefile
+build-*/
+
+# ========================
+# Object files
+# ========================
+*.o
+*.obj
+
+# ========================
+# Executables
+# ========================
+*.exe
+*.dll
+*.so
+*.dylib
+*.app
+
+# ========================
+# Qt auto-generated
+# ========================
+.autosave
+
+# ========================
+# OS / Editor junk
+# ========================
+.DS_Store
+Thumbs.db
+*.swp
+*.bak
+*~
+
+# ========================
+# Logs
+# ========================
+*.log
+
+# ========================
+# Qt Creator / Qt tools
+# ========================
+.qt/
+.qtc/
+.qtc_clangd/
+.qtcreator/
+.qtcsettings.cmake
+
+# ========================
+# CMake generated
+# ========================
+.cmake/
+*_autogen/
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# ========================
+# Build outputs / binaries
+# ========================
+*/untitled
+*.exe
+*.dll
+*.so
+*.app
+
+# ========================
+# Qt Creator user files
+# ========================
+*.pro.user*
+
+*/qtcsettings.cmake
