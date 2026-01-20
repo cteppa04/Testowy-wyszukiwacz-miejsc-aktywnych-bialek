@@ -1,4 +1,4 @@
-QT       += core gui
+QT += core gui openglwidgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -9,15 +9,17 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    atom.cpp \
+    classes/atom.cpp \
+    classes/parse_file.cpp \
     main.cpp \
     mainwindow.cpp \
-    parse_pdb.cpp
+    widgets/molecule_visualization_widget.cpp
 
 HEADERS += \
-    atom.h \
+    classes/atom.h \
+    classes/parse_file.h \
     mainwindow.h \
-    parse_pdb.h
+    widgets/molecule_visualization_widget.h
 
 FORMS += \
     mainwindow.ui

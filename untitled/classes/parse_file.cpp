@@ -2,14 +2,15 @@
 #include <QTextStream>
 #include <QVector3D>
 #include <QDebug>
+#include "classes/parse_file.h"
+#include "classes/atom.h"
 
-#include "atom.h"
 
-QVector<Atom> parsePDB(const QString &filePath)
+QVector<Atom> Parse_file::parse_PDB(const QString &file_path)
 {
     QVector<Atom> atoms;
 
-    QFile file(filePath);
+    QFile file(file_path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Cannot open PDB file";
         return atoms;
@@ -20,11 +21,9 @@ QVector<Atom> parsePDB(const QString &filePath)
     while (!in.atEnd()) {
         QString line = in.readLine();
 
-        // Only ATOM and HETATM records
         if (!line.startsWith("ATOM") && !line.startsWith("HETATM"))
             continue;
 
-        // Defensive check for short lines
         if (line.length() < 78)
             continue;
 
@@ -38,9 +37,9 @@ QVector<Atom> parsePDB(const QString &filePath)
 
         QVector3D position(x, y, z);
 
-        atoms.append(Atom(serial, position, element));
+        atoms.append(Atom(serial, position,element));
     }
-
     file.close();
     return atoms;
 }
+
