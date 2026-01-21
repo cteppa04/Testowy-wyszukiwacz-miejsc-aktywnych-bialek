@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/resources">
+        <file>shaders/testShader.vert</file>
+        <file>shaders/testShader2.fsh</file>
+    </qresource>
+</RCC>
