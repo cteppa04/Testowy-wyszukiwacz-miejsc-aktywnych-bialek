@@ -19,6 +19,7 @@ HEADERS += \
     classes/atom.h \
     classes/parse_file.h \
     mainwindow.h \
+    stb_image.h \
     widgets/molecule_visualization_widget.h
 
 FORMS += \

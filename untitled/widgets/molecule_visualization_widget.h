@@ -20,8 +20,8 @@ protected:
     void resizeGL(int w, int h);
     void paintGL();
 
-    GLuint VAO;
-    GLuint VBO;
+    GLuint VAO[2];
+    GLuint VBO[2];
     GLuint shader_program;
 signals:
 };

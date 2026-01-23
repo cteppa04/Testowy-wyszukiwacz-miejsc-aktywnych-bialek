@@ -1,3 +1,7 @@
+//define the images import library as a cpp file.
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 #include <QFileDialog>
