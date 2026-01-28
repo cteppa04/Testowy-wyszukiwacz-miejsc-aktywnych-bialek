@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QOpenGLFunctions_3_3_Core>
+#include <glm/glm.hpp>
 
 class Molecule_visualization_widget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
@@ -16,13 +17,16 @@ public:
     ~Molecule_visualization_widget();
 protected:
     //functions that must be overriden from QOpenGLWidget
-    void initializeGL();
-    void resizeGL(int w, int h);
-    void paintGL();
+    void initializeGL() override;
+    void resizeGL(int w, int h) override;
+    void paintGL() override;
 
-    GLuint VAO[2];
-    GLuint VBO[2];
+    GLuint VAO;
+    GLuint VBO;
     GLuint shader_program;
+
+    void keyPressEvent(QKeyEvent *event) override;
+    void keyReleaseEvent(QKeyEvent *event) override;
 signals:
 };
 
