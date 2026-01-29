@@ -86,13 +86,15 @@ GLuint uniform_loc = 0;
 bool keys[256] = {false};
 
 //origin point camera initialization
-const float OP_CAMERA_MOVE_SPEED = 0.25f;
-const float OP_CAMERA_ROTATION_SPEED = 5.0f;
+const float OP_CAMERA_MOVE_SPEED = 0.5f;
+const float OP_CAMERA_ROTATION_SPEED = 0.05f;
 
-const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,-10.0f);
-const glm::vec3 WORLD_UP = glm::vec3(0.0,1.0,0.0);
+const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,0.0f);
 
-glm::vec3 camera_pos(0.0,0.0,-10.0f);
+glm::vec3 camera_position(CAMERA_STARTING_POS);
+glm::vec3 new_camera_position(camera_position);
+glm::vec3 camera_position_delta;
+
 glm::vec3 z_axis = glm::vec3(0.0,0.0,1.0);
 glm::vec3 y_axis = glm::vec3(0.0,1.0,0.0);
 glm::vec3 x_axis = glm::vec3(1.0,0.0,0.0);
@@ -101,6 +103,10 @@ float pitch = 0.0f;
 float yaw = 0.0f;
 float roll = 0.0f;
 float radius = 0.0f;
+
+//function declarations
+std::array<float,3> cartesian_to_euler(glm::vec3 position);
+glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius);
 
 QElapsedTimer timer;
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
@@ -116,25 +122,47 @@ Molecule_visualization_widget::~Molecule_visualization_widget()
 
 void Molecule_visualization_widget::paintGL()
 {
-    //origin point camera control
-    if (keys[Qt::Key_W]){
 
+    qDebug() << "Camera position: " << camera_position.x << " " <<  camera_position.y << " " << camera_position.z;
+    //origin point camera control
+    //radius modification
+    if (keys[Qt::Key_W]){
+        radius -= OP_CAMERA_MOVE_SPEED;
     }
     if (keys[Qt::Key_S]){
-
+        radius += OP_CAMERA_MOVE_SPEED;
     }
+    //make sure the radius is never smaller than 0;
+    radius = std::max(0.0f,radius);
+    //pitch modification
     if (keys[Qt::Key_D]){
-
+        yaw+= OP_CAMERA_ROTATION_SPEED;
     }
     if (keys[Qt::Key_A]){
-
+        yaw -= OP_CAMERA_ROTATION_SPEED;
     }
-    if (keys[Qt::Key_E]){
 
+    //yaw modification
+    if (keys[Qt::Key_E]){
+        pitch += OP_CAMERA_ROTATION_SPEED;
     }
     if (keys[Qt::Key_Q]){
-
+        pitch -= OP_CAMERA_ROTATION_SPEED;
     }
+    //make sure the pitch angle [up/down] does not exceed 90 degrees
+    pitch = glm::clamp(pitch,-89.0f,89.0f);
+
+    qDebug() << "radius: " << radius;
+    //calculate new camera position
+
+    new_camera_position = euler_to_cartesian(pitch,yaw,radius);
+
+    camera_position_delta = new_camera_position - camera_position;
+    camera_position = new_camera_position;
+    view = glm::translate(view,-camera_position_delta);
+
+
+
 
     //clear colors in bg and enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -146,18 +174,35 @@ void Molecule_visualization_widget::paintGL()
     glUseProgram(shader_program);
 
     //sent matrices to shader program
-    glBindVertexArray(VAO);
-    for(unsigned int i = 0; i < 10; i++){
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,cubePositions[i]);
-        model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
-        glm::mat4 transformation_matrices[3] = {model,view,projection};
-        glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
+        glBindVertexArray(VAO);
+        for(unsigned int i = 0; i < 10; i++){
+            model = glm::mat4(1.0f);
+            model = glm::translate(model,cubePositions[i]);
+            model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
+            glm::mat4 transformation_matrices[3] = {model,view,projection};
+            glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
 
-        glDrawArrays(GL_TRIANGLES,0,36);
-    }
+            glDrawArrays(GL_TRIANGLES,0,36);
+        }
 
     update();
+}
+
+glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius){
+    glm::vec3 direction_rad;
+    direction_rad.x = std::sin(yaw) * cos(pitch);
+    direction_rad.z = std::cos(yaw) * cos(pitch);
+    direction_rad.y = std::sin(pitch);
+    qDebug() << direction_rad.x << " " << direction_rad.y << " " << direction_rad.z;
+    glm::vec3 position = direction_rad * radius;
+    return position;
+}
+
+std::array<float,3> cartesian_to_euler(glm::vec3 position){
+    float radius = glm::length(position);
+    float yaw = glm::degrees(std::atan2(position.x,position.z));
+    float pitch = glm::degrees(std::atan2(position.y,radius));
+    return {yaw,pitch,radius};
 }
 
 void Molecule_visualization_widget::resizeGL(int w, int h)
@@ -167,9 +212,12 @@ void Molecule_visualization_widget::resizeGL(int w, int h)
 
 void Molecule_visualization_widget::initializeGL()
 {
-    x_axis = glm::normalize(x_axis);
-    y_axis = glm::normalize(y_axis);
-    z_axis = glm::normalize(z_axis);
+    //camera inicjalization
+    auto euler = cartesian_to_euler(CAMERA_STARTING_POS);
+    yaw = euler[0];
+    pitch = euler[1];
+    radius = euler[2];
+
     //set buffers and shit
     initializeOpenGLFunctions();
 
