@@ -88,16 +88,18 @@ bool keys[256] = {false};
 //origin point camera initialization
 const float OP_CAMERA_MOVE_SPEED = 0.5f;
 const float OP_CAMERA_ROTATION_SPEED = 0.05f;
-
-const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,0.0f);
+const glm::vec3 CAMERA_ORIGIN_POINT(0.0,0.0,0.0);
+const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,10.0f);
 
 glm::vec3 camera_position(CAMERA_STARTING_POS);
-glm::vec3 new_camera_position(camera_position);
-glm::vec3 camera_position_delta;
 
-glm::vec3 z_axis = glm::vec3(0.0,0.0,1.0);
-glm::vec3 y_axis = glm::vec3(0.0,1.0,0.0);
-glm::vec3 x_axis = glm::vec3(1.0,0.0,0.0);
+const glm::vec3 WORLD_X_AXIS = glm::vec3(1.0,0.0,0.0);
+const glm::vec3 WORLD_Y_AXIS = glm::vec3(0.0,1.0,0.0);
+const glm::vec3 WORLD_Z_AXIS = glm::vec3(0.0,0.0,1.0);
+
+glm::vec3 local_x_axis;
+glm::vec3 local_y_axis;
+glm::vec3 local_z_axis;
 
 float pitch = 0.0f;
 float yaw = 0.0f;
@@ -123,7 +125,6 @@ Molecule_visualization_widget::~Molecule_visualization_widget()
 void Molecule_visualization_widget::paintGL()
 {
 
-    qDebug() << "Camera position: " << camera_position.x << " " <<  camera_position.y << " " << camera_position.z;
     //origin point camera control
     //radius modification
     if (keys[Qt::Key_W]){
@@ -150,18 +151,25 @@ void Molecule_visualization_widget::paintGL()
         pitch -= OP_CAMERA_ROTATION_SPEED;
     }
     //make sure the pitch angle [up/down] does not exceed 90 degrees
-    pitch = glm::clamp(pitch,-89.0f,89.0f);
+    pitch = glm::clamp(pitch,glm::radians(-89.0f),glm::radians(89.0f));
+    camera_position = euler_to_cartesian(pitch,yaw,radius);
 
-    qDebug() << "radius: " << radius;
+    qDebug() << "Camera position: " << camera_position.x << " " <<  camera_position.y << " " << camera_position.z;
+    qDebug() << "Yaw: " << yaw << " pitch: " <<  pitch << " radius: " << radius;
     //calculate new camera position
 
-    new_camera_position = euler_to_cartesian(pitch,yaw,radius);
 
-    camera_position_delta = new_camera_position - camera_position;
-    camera_position = new_camera_position;
-    view = glm::translate(view,-camera_position_delta);
+    //rebuild view so the changes dont accumulate
+    view = glm::mat4(1.0f);
+    //handle looking at the origin_point
+    glm::vec3 look_at_direction = glm::normalize(CAMERA_ORIGIN_POINT - camera_position);
+    qDebug() << "look at direction: " << look_at_direction.x << " " <<  look_at_direction.y << " " << look_at_direction.z;
+    local_x_axis = glm::normalize(glm::cross(look_at_direction,WORLD_Y_AXIS));
 
-
+    view = glm::rotate(view,-yaw,WORLD_Y_AXIS);
+    view = glm::rotate(view,pitch,local_x_axis);
+    //handle translation
+    view = glm::translate(view,-camera_position);
 
 
     //clear colors in bg and enable depth testing
