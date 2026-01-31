@@ -86,8 +86,8 @@ GLuint uniform_loc = 0;
 bool keys[256] = {false};
 
 //origin point camera initialization
-const float OP_CAMERA_MOVE_SPEED = 0.5f;
-const float OP_CAMERA_ROTATION_SPEED = 0.05f;
+const float OP_CAMERA_MOVE_SPEED = 20.0f;
+const float OP_CAMERA_ROTATION_SPEED = 4.0f;
 const glm::vec3 CAMERA_ORIGIN_POINT(0.0,0.0,0.0);
 const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,10.0f);
 
@@ -110,13 +110,20 @@ float radius = 0.0f;
 std::array<float,3> cartesian_to_euler(glm::vec3 position);
 glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius);
 
+//delta time declarations
 QElapsedTimer timer;
+uint last_time;
+uint current_time;
+float delta_time;
+
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
 {
     setFocusPolicy(Qt::StrongFocus); // widget can accept keyboard focus
     setFocus(); // actively give it focus
+
     timer.start();
+    last_time = timer.elapsed();
 }
 
 Molecule_visualization_widget::~Molecule_visualization_widget()
@@ -124,32 +131,34 @@ Molecule_visualization_widget::~Molecule_visualization_widget()
 
 void Molecule_visualization_widget::paintGL()
 {
-
+    current_time = timer.elapsed();
+    delta_time = (current_time - last_time) / 1000.0f;
     //origin point camera control
     //radius modification
     if (keys[Qt::Key_W]){
-        radius -= OP_CAMERA_MOVE_SPEED;
+        radius -= OP_CAMERA_MOVE_SPEED * delta_time;
     }
     if (keys[Qt::Key_S]){
-        radius += OP_CAMERA_MOVE_SPEED;
+        radius += OP_CAMERA_MOVE_SPEED * delta_time;
     }
     //make sure the radius is never smaller than 0;
-    radius = std::max(0.0f,radius);
+    radius = std::max(0.1f,radius);
     //pitch modification
     if (keys[Qt::Key_D]){
-        yaw+= OP_CAMERA_ROTATION_SPEED;
+        yaw+= OP_CAMERA_ROTATION_SPEED * delta_time;
     }
     if (keys[Qt::Key_A]){
-        yaw -= OP_CAMERA_ROTATION_SPEED;
+        yaw -= OP_CAMERA_ROTATION_SPEED * delta_time;
     }
 
     //yaw modification
     if (keys[Qt::Key_E]){
-        pitch += OP_CAMERA_ROTATION_SPEED;
+        pitch += OP_CAMERA_ROTATION_SPEED * delta_time;
     }
     if (keys[Qt::Key_Q]){
-        pitch -= OP_CAMERA_ROTATION_SPEED;
+        pitch -= OP_CAMERA_ROTATION_SPEED * delta_time;
     }
+    last_time = timer.elapsed();
     //make sure the pitch angle [up/down] does not exceed 90 degrees
     pitch = glm::clamp(pitch,glm::radians(-89.0f),glm::radians(89.0f));
     camera_position = euler_to_cartesian(pitch,yaw,radius);
@@ -227,8 +236,13 @@ void Molecule_visualization_widget::initializeGL()
     radius = euler[2];
 
     //set buffers and shit
-    initializeOpenGLFunctions();
-
+    qDebug() << "OpenGL version:"
+             << context()->format().majorVersion()
+             << "." << context()->format().minorVersion();
+    makeCurrent();
+    this->initializeOpenGLFunctions();
+    qDebug() << "OpenGL version:" << reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    qDebug() << "Shading language version:" << reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
     //shaders shit
     //debuggin variables
     int succes;
