@@ -10,7 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     classes/atom.cpp \
-    classes/orbit_camera.cpp \
+    classes/camera.cpp \
     classes/parse_file.cpp \
     includes/glm/detail/glm.cpp \
     main.cpp \
@@ -19,8 +19,9 @@ SOURCES += \
 
 HEADERS += \
     classes/atom.h \
-    classes/orbit_camera.h \
+    classes/camera.h \
     classes/parse_file.h \
+    classes/position_transforms.h \
     includes/glm/common.hpp \
     includes/glm/detail/_fixes.hpp \
     includes/glm/detail/_noise.hpp \

@@ -240,7 +240,7 @@ void Molecule_visualization_widget::initializeGL()
              << context()->format().majorVersion()
              << "." << context()->format().minorVersion();
     makeCurrent();
-    this->initializeOpenGLFunctions();
+    initializeOpenGLFunctions();
     qDebug() << "OpenGL version:" << reinterpret_cast<const char*>(glGetString(GL_VERSION));
     qDebug() << "Shading language version:" << reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
     //shaders shit
