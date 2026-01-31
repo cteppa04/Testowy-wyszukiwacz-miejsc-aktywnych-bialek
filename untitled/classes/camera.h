@@ -15,9 +15,11 @@ public:
     Camera();
 
     void setType(Type type);
-    void start(glm::vec3 *camera_starting_position);
+    void set_camera_orbit_point(glm::vec3 ORBIT_CAMERA_ORBIT_POINT);
 
-    void update(const bool *keys);
+    void start(const glm::vec3 *camera_starting_position);
+
+    glm::mat4 update(QSet<int> *keys);
 
 
     glm::mat4 m_view_matrix = glm::mat4(1.0f);
@@ -26,12 +28,12 @@ public:
 private:
     Type m_type{Type::Orbit};
     //basic camera settings
-    const float ORBIT_CAMERA_MOVE_SPEED = 20.0f;
-    const float ORBIT_CAMERA_ROTATION_SPEED = 4.0f;
+    const float M_ORBIT_CAMERA_MOVE_SPEED = 20.0f;
+    const float M_ORBIT_CAMERA_ROTATION_SPEED = 4.0f;
 
-    const glm::vec3 WORLD_X_AXIS = glm::vec3(1.0,0.0,0.0);
-    const glm::vec3 WORLD_Y_AXIS = glm::vec3(0.0,1.0,0.0);
-    const glm::vec3 WORLD_Z_AXIS = glm::vec3(0.0,0.0,1.0);
+    const glm::vec3 M_WORLD_X_AXIS = glm::vec3(1.0,0.0,0.0);
+    const glm::vec3 M_WORLD_Y_AXIS = glm::vec3(0.0,1.0,0.0);
+    const glm::vec3 M_WORLD_Z_AXIS = glm::vec3(0.0,0.0,1.0);
 
     glm::vec3 m_local_x_axis;
     glm::vec3 m_local_y_axis;
@@ -43,7 +45,7 @@ private:
     float m_radius = 0.0f;
 
     //origin point camera settings
-    glm::vec3 ORBIT_CAMERA_ORBIT_POINT = glm::vec3(0.0,0.0,0.0);
+    glm::vec3 m_orbit_camera_orbit_point= glm::vec3(0.0,0.0,0.0);
 
     //delta time declarations
     QElapsedTimer m_timer;

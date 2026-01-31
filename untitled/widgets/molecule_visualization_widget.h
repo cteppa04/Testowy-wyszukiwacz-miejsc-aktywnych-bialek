@@ -8,6 +8,7 @@
 #include <QDebug>
 #include <QOpenGLFunctions_3_3_Core>
 #include <glm/glm.hpp>
+#include <classes/camera.h>
 
 class Molecule_visualization_widget : public QOpenGLWidget, protected QOpenGLFunctions_3_3_Core
 {
@@ -27,6 +28,8 @@ protected:
 
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
+
+    CAMERA_H::Camera camera;
 signals:
 };
 

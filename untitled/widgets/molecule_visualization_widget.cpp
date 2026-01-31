@@ -7,6 +7,8 @@
 #include <QElapsedTimer>
 #include <QKeyEvent>
 
+
+
 float wierzcholki[] ={
     // FRONT (+Z)
     -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
@@ -83,38 +85,19 @@ glm::mat4 projection(1.0f);
 GLuint uniform_loc = 0;
 
 //keyboard input array
-bool keys[256] = {false};
+QSet<int> keys;
 
 //origin point camera initialization
-const float OP_CAMERA_MOVE_SPEED = 20.0f;
-const float OP_CAMERA_ROTATION_SPEED = 4.0f;
-const glm::vec3 CAMERA_ORIGIN_POINT(0.0,0.0,0.0);
+
 const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,10.0f);
+
+glm::vec3 orbit_camera_orbit_point (0.0f,0.0f,0.0f);
 
 glm::vec3 camera_position(CAMERA_STARTING_POS);
 
-const glm::vec3 WORLD_X_AXIS = glm::vec3(1.0,0.0,0.0);
-const glm::vec3 WORLD_Y_AXIS = glm::vec3(0.0,1.0,0.0);
-const glm::vec3 WORLD_Z_AXIS = glm::vec3(0.0,0.0,1.0);
-
-glm::vec3 local_x_axis;
-glm::vec3 local_y_axis;
-glm::vec3 local_z_axis;
-
-float pitch = 0.0f;
-float yaw = 0.0f;
-float roll = 0.0f;
-float radius = 0.0f;
-
-//function declarations
-std::array<float,3> cartesian_to_euler(glm::vec3 position);
-glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius);
-
-//delta time declarations
+//time declarations
 QElapsedTimer timer;
-uint last_time;
-uint current_time;
-float delta_time;
+
 
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -123,7 +106,11 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     setFocus(); // actively give it focus
 
     timer.start();
-    last_time = timer.elapsed();
+    //start the camera
+
+    camera.setType(CAMERA_H::Camera::Type::Orbit);
+    camera.start(&CAMERA_STARTING_POS);
+    camera.set_camera_orbit_point(orbit_camera_orbit_point);
 }
 
 Molecule_visualization_widget::~Molecule_visualization_widget()
@@ -131,55 +118,7 @@ Molecule_visualization_widget::~Molecule_visualization_widget()
 
 void Molecule_visualization_widget::paintGL()
 {
-    current_time = timer.elapsed();
-    delta_time = (current_time - last_time) / 1000.0f;
-    //origin point camera control
-    //radius modification
-    if (keys[Qt::Key_W]){
-        radius -= OP_CAMERA_MOVE_SPEED * delta_time;
-    }
-    if (keys[Qt::Key_S]){
-        radius += OP_CAMERA_MOVE_SPEED * delta_time;
-    }
-    //make sure the radius is never smaller than 0;
-    radius = std::max(0.1f,radius);
-    //pitch modification
-    if (keys[Qt::Key_D]){
-        yaw+= OP_CAMERA_ROTATION_SPEED * delta_time;
-    }
-    if (keys[Qt::Key_A]){
-        yaw -= OP_CAMERA_ROTATION_SPEED * delta_time;
-    }
-
-    //yaw modification
-    if (keys[Qt::Key_E]){
-        pitch += OP_CAMERA_ROTATION_SPEED * delta_time;
-    }
-    if (keys[Qt::Key_Q]){
-        pitch -= OP_CAMERA_ROTATION_SPEED * delta_time;
-    }
-    last_time = timer.elapsed();
-    //make sure the pitch angle [up/down] does not exceed 90 degrees
-    pitch = glm::clamp(pitch,glm::radians(-89.0f),glm::radians(89.0f));
-    camera_position = euler_to_cartesian(pitch,yaw,radius);
-
-    qDebug() << "Camera position: " << camera_position.x << " " <<  camera_position.y << " " << camera_position.z;
-    qDebug() << "Yaw: " << yaw << " pitch: " <<  pitch << " radius: " << radius;
-    //calculate new camera position
-
-
-    //rebuild view so the changes dont accumulate
-    view = glm::mat4(1.0f);
-    //handle looking at the origin_point
-    glm::vec3 look_at_direction = glm::normalize(CAMERA_ORIGIN_POINT - camera_position);
-    qDebug() << "look at direction: " << look_at_direction.x << " " <<  look_at_direction.y << " " << look_at_direction.z;
-    local_x_axis = glm::normalize(glm::cross(look_at_direction,WORLD_Y_AXIS));
-
-    view = glm::rotate(view,-yaw,WORLD_Y_AXIS);
-    view = glm::rotate(view,pitch,local_x_axis);
-    //handle translation
-    view = glm::translate(view,-camera_position);
-
+    view = camera.update(&keys);
 
     //clear colors in bg and enable depth testing
     glEnable(GL_DEPTH_TEST);
@@ -205,23 +144,6 @@ void Molecule_visualization_widget::paintGL()
     update();
 }
 
-glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius){
-    glm::vec3 direction_rad;
-    direction_rad.x = std::sin(yaw) * cos(pitch);
-    direction_rad.z = std::cos(yaw) * cos(pitch);
-    direction_rad.y = std::sin(pitch);
-    qDebug() << direction_rad.x << " " << direction_rad.y << " " << direction_rad.z;
-    glm::vec3 position = direction_rad * radius;
-    return position;
-}
-
-std::array<float,3> cartesian_to_euler(glm::vec3 position){
-    float radius = glm::length(position);
-    float yaw = glm::degrees(std::atan2(position.x,position.z));
-    float pitch = glm::degrees(std::atan2(position.y,radius));
-    return {yaw,pitch,radius};
-}
-
 void Molecule_visualization_widget::resizeGL(int w, int h)
 {
     glViewport(0,0,w,h);
@@ -229,12 +151,6 @@ void Molecule_visualization_widget::resizeGL(int w, int h)
 
 void Molecule_visualization_widget::initializeGL()
 {
-    //camera inicjalization
-    auto euler = cartesian_to_euler(CAMERA_STARTING_POS);
-    yaw = euler[0];
-    pitch = euler[1];
-    radius = euler[2];
-
     //set buffers and shit
     qDebug() << "OpenGL version:"
              << context()->format().majorVersion()
@@ -331,17 +247,15 @@ void Molecule_visualization_widget::initializeGL()
 
 }
 
-//keyboard input handling
-void Molecule_visualization_widget::keyPressEvent(QKeyEvent *event)
-{
-    if(!event->isAutoRepeat()){
-        keys[event->key()] = true;
+//keyboard key handling
+void Molecule_visualization_widget::keyPressEvent(QKeyEvent *event) {
+    if (!event->isAutoRepeat()) {
+        keys.insert(event->key());
     }
 }
 
-
-void Molecule_visualization_widget::keyReleaseEvent(QKeyEvent *event)
-{
-    if (!event->isAutoRepeat())
-        keys[event->key()] = false;
+void Molecule_visualization_widget::keyReleaseEvent(QKeyEvent *event) {
+    if (!event->isAutoRepeat()) {
+        keys.remove(event->key());
+    }
 }
