@@ -20,7 +20,12 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_addButton_clicked()
 {
-    QString file_name = QFileDialog::getOpenFileName(this,"Wybierz plik grubasie","C://");
+    QString file_name = QFileDialog::getOpenFileName(this,
+                                                     "Prosze wybrac plik",
+                                                     QDir::homePath(),
+                                                     "PDB Files (*.pdb);;All Files (*)",
+                                                     nullptr,
+                                                     QFileDialog::DontUseNativeDialog);
     QVector<Atom> atomy = Parse_file::parse_PDB(file_name);
     QString allAtomsString;
     //create atom string for test purposes
