@@ -7,7 +7,7 @@
 #include <QElapsedTimer>
 #include <QKeyEvent>
 
-
+#include <classes/OpenGl/shader_wrapper.h>
 
 float wierzcholki[] ={
     // FRONT (+Z)
@@ -127,7 +127,7 @@ void Molecule_visualization_widget::paintGL()
 
 
     //use program
-    glUseProgram(shader_program);
+    glUseProgram(shader_program.use());
 
     //sent matrices to shader program
         glBindVertexArray(VAO);
@@ -157,68 +157,8 @@ void Molecule_visualization_widget::initializeGL()
              << "." << context()->format().minorVersion();
     makeCurrent();
     initializeOpenGLFunctions();
-    qDebug() << "OpenGL version:" << reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    qDebug() << "Shading language version:" << reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
-    //shaders shit
-    //debuggin variables
-    int succes;
-    char error_info[512];
 
-    //get vertex shader source, change it to *qstring and compile it
-    QString shader_temp_source;
-    QFile file(":/resources/shaders/testShader.vert");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug("No vertex shader idiot");
-    }else{
-        shader_temp_source = file.readAll();
-        file.close();
-    }
-
-    QByteArray temp;
-    temp = shader_temp_source.toUtf8();
-    const char* shader_source;
-    shader_source = temp.constData();
-    GLuint vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader,1,&shader_source,NULL);
-    glCompileShader(vertex_shader);
-
-    glGetShaderiv(vertex_shader,GL_COMPILE_STATUS,&succes);
-    if(!succes){
-        glGetShaderInfoLog(vertex_shader,512,NULL,error_info);
-        qDebug() << "error nig: " << error_info;
-    }
-
-    //same with fragment shader
-    file.setFileName(":/resources/shaders/testShader2.fsh");
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qDebug("No fragment shader idiot");
-    }else{
-        shader_temp_source = file.readAll();
-        file.close();
-    }
-
-    temp = shader_temp_source.toUtf8();
-    shader_source = temp.constData();
-    GLuint fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader,1,&shader_source,NULL);
-    glCompileShader(fragment_shader);
-
-    glGetShaderiv(fragment_shader,GL_COMPILE_STATUS,&succes);
-    if(!succes){
-        glGetShaderInfoLog(fragment_shader,512,NULL,error_info);
-        qDebug() << "error nig: " << error_info;
-    }
-
-    //create shader program
-    shader_program = glCreateProgram();
-
-    glAttachShader(shader_program, vertex_shader);
-    glAttachShader(shader_program, fragment_shader);
-    glLinkProgram(shader_program);
-
-    //delete shader files
-    glDeleteShader(vertex_shader);
-    glDeleteShader(fragment_shader);
+    shader_program.create_shader(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
 
     //create VAO - vertex array object
     glGenVertexArrays(1, &VAO);
@@ -243,7 +183,7 @@ void Molecule_visualization_widget::initializeGL()
 
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
-    uniform_loc = glGetUniformLocation(shader_program,"transformation_matrices");
+    uniform_loc = glGetUniformLocation(shader_program.use(),"transformation_matrices");
 
 }
 
