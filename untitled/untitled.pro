@@ -9,7 +9,7 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    classes/OpenGl/geometry/sphere.cpp \
+    classes/OpenGl/geometry/sphere_mesh.cpp \
     classes/OpenGl/shader_wrapper.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
@@ -20,7 +20,8 @@ SOURCES += \
     widgets/molecule_visualization_widget.cpp
 
 HEADERS += \
-    classes/OpenGl/geometry/sphere.h \
+    classes/OpenGl/geometry/master.h \
+    classes/OpenGl/geometry/sphere_mesh.h \
     classes/OpenGl/shader_wrapper.h \
     classes/atom.h \
     classes/camera.h \

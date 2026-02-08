@@ -8,6 +8,7 @@
 #include <QKeyEvent>
 
 #include <classes/OpenGl/shader_wrapper.h>
+#include <classes/OpenGl/geometry/master.h>
 
 float wierzcholki[] ={
     // FRONT (+Z)
@@ -111,10 +112,12 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     camera.setType(CAMERA_H::Camera::Type::Orbit);
     camera.start(&CAMERA_STARTING_POS);
     camera.set_camera_orbit_point(orbit_camera_orbit_point);
+
 }
 
 Molecule_visualization_widget::~Molecule_visualization_widget()
-{}
+{
+}
 
 void Molecule_visualization_widget::paintGL()
 {
@@ -158,6 +161,7 @@ void Molecule_visualization_widget::initializeGL()
     makeCurrent();
     initializeOpenGLFunctions();
 
+    Sphere_mesh test(4,2);
     shader_program.create_shader(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
 
     //create VAO - vertex array object
