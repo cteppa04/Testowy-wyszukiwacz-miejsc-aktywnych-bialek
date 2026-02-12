@@ -66,9 +66,6 @@ void Camera::start(const glm::vec3 *camera_starting_position)
         //make sure the pitch angle [up/down] does not exceed 90 degrees
         m_pitch = glm::clamp(m_pitch,glm::radians(-89.0f),glm::radians(89.0f));
         m_camera_position = euler_to_cartesian(m_pitch,m_yaw,m_radius);
-        qDebug() << "Orbit position: " << m_orbit_camera_orbit_point.x << " " << m_orbit_camera_orbit_point.y << " " << m_orbit_camera_orbit_point.z;
-        qDebug() << "Camera position: " << m_camera_position.x << " " << m_camera_position.y << " " << m_camera_position.z;
-        qDebug() << "Yaw " << m_yaw << " pitch: " << m_pitch << " radius: " << m_radius;
 
         //rebuild view so the changes dont accumulate
         m_view_matrix = glm::mat4(1.0f);

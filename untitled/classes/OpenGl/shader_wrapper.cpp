@@ -52,7 +52,7 @@ unsigned int Shader_wrapper::create_shader(QString vertex_shader_source, QString
     glGetShaderiv(fragment_shader,GL_COMPILE_STATUS,&succes);
     if(!succes){
         glGetShaderInfoLog(fragment_shader,512,NULL,error_info);
-        qDebug() << "error nig: " << error_info;
+        qDebug() << "error nigger: " << error_info;
     }
 
     //create shader program

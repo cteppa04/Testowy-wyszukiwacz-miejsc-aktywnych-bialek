@@ -7,10 +7,8 @@
 
 Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
 {
-    initializeOpenGLFunctions();
 
     //generate verticies and indices
-    QVector<float> verticies = {};
     //add first sphere vertex
     verticies.append(QVector<float>{0.0,1.0,0.0});
 
@@ -40,11 +38,11 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
     verticies.append(QVector<float>{0.0,-1.0,0.0});
 
     qDebug() << "verticies: " << verticies;
-    QVector<uint> indices;
 
+
+    //calculate indices -> path of each triangle;
     uint top_vertex = 0;
     uint bottom_vertex = verticies.size()/3 - 1;
-    //calculate indices -> path of each triangle;
     //top cap
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
         indices.append(top_vertex);
@@ -53,7 +51,7 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
     }
     //middle
 
-    for(uint current_stack = 0;current_stack < stacks;++current_stack){
+    for(uint current_stack = 0;current_stack < stacks - 1;++current_stack){
         uint current_stack_start = current_stack * slices + 1;
         uint next_stack_start = current_stack_start + slices;
 
@@ -82,31 +80,5 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
         indices.append(bottom_vertex);
     }
     qDebug() << indices;
-
-    //generate buffers
-    glGenVertexArrays(1,&VAO);
-    glGenBuffers(1,&VBO);
-    glGenBuffers(1,&EBO);
-
-    //bind buffers
-    //Bind VAO
-    glBindVertexArray(VAO);
-
-    //Bind and fill VBO
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    glBufferData(GL_ARRAY_BUFFER,verticies.size() * sizeof(float),verticies.data(),GL_STATIC_DRAW);
-
-    //Bind and fill EBO
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices.size() * sizeof(uint),indices.data(),GL_STATIC_DRAW);
-
-    //set attributes
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(float),(void*)0);
-    glEnableVertexAttribArray(0);
-    //unbind buffers
-
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // optional
-
 }
 

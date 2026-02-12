@@ -10,6 +10,7 @@ CONFIG += c++17
 
 SOURCES += \
     classes/OpenGl/geometry/sphere_mesh.cpp \
+    classes/OpenGl/objects/sphere_object.cpp \
     classes/OpenGl/shader_wrapper.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
@@ -20,8 +21,10 @@ SOURCES += \
     widgets/molecule_visualization_widget.cpp
 
 HEADERS += \
-    classes/OpenGl/geometry/master.h \
+    classes/OpenGl/geometry/geometry_master.h \
     classes/OpenGl/geometry/sphere_mesh.h \
+    classes/OpenGl/objects/object_master.h \
+    classes/OpenGl/objects/sphere_object.h \
     classes/OpenGl/shader_wrapper.h \
     classes/atom.h \
     classes/camera.h \

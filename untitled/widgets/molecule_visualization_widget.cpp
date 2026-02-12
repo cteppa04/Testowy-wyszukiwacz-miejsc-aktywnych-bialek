@@ -5,68 +5,15 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include <QElapsedTimer>
+#include <QTimer>
 #include <QKeyEvent>
 
 #include <classes/OpenGl/shader_wrapper.h>
-#include <classes/OpenGl/geometry/master.h>
+#include <classes/OpenGl/geometry/geometry_master.h>
+#include <classes/OpenGl/objects/object_master.h>
 
-float wierzcholki[] ={
-    // FRONT (+Z)
-    -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-    0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-    0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
 
-    -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-    0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,   1.0f, 0.0f, 0.0f,
-
-    // BACK (-Z)
-    -0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-    0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-    0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-    0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 0.0f,
-
-    // LEFT (-X)
-    -0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,   0.0f, 0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,   0.0f, 0.0f, 1.0f,
-
-    -0.5f, -0.5f, -0.5f,   0.0f, 0.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,   0.0f, 0.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,   0.0f, 0.0f, 1.0f,
-
-    // RIGHT (+X)
-    0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.0f,
-    0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 0.0f,
-    0.5f, -0.5f,  0.5f,   1.0f, 1.0f, 0.0f,
-
-    0.5f, -0.5f, -0.5f,   1.0f, 1.0f, 0.0f,
-    0.5f,  0.5f, -0.5f,   1.0f, 1.0f, 0.0f,
-    0.5f,  0.5f,  0.5f,   1.0f, 1.0f, 0.0f,
-
-    // TOP (+Y)
-    -0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,   0.0f, 1.0f, 1.0f,
-    0.5f,  0.5f,  0.5f,   0.0f, 1.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 1.0f,
-    0.5f,  0.5f,  0.5f,   0.0f, 1.0f, 1.0f,
-    0.5f,  0.5f, -0.5f,   0.0f, 1.0f, 1.0f,
-
-    // BOTTOM (-Y)
-    -0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 1.0f,
-    0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 1.0f,
-
-    -0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 1.0f,
-    0.5f, -0.5f, -0.5f,   1.0f, 0.0f, 1.0f,
-    0.5f, -0.5f,  0.5f,   1.0f, 0.0f, 1.0f,
-};
-
-glm::vec3 cubePositions[] = {
+glm::vec3 Positions[] = {
     glm::vec3( 0.0f,  0.0f,  0.0f),
     glm::vec3( 2.0f,  5.0f, -15.0f),
     glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -113,38 +60,37 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     camera.start(&CAMERA_STARTING_POS);
     camera.set_camera_orbit_point(orbit_camera_orbit_point);
 
+    QTimer *timer_refresh = new QTimer(this);
+    connect(timer_refresh, &QTimer::timeout, this, QOverload<>::of(&Molecule_visualization_widget::update));
+    timer_refresh->start(16); // ~60 FPS
 }
 
-Molecule_visualization_widget::~Molecule_visualization_widget()
-{
-}
 
 void Molecule_visualization_widget::paintGL()
 {
     view = camera.update(&keys);
 
     //clear colors in bg and enable depth testing
-    glEnable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST); // enable depth testing
+    glClearDepth(1.0f);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear both color and depth
 
 
     //use program
     glUseProgram(shader_program.use());
 
     //sent matrices to shader program
-        glBindVertexArray(VAO);
-        for(unsigned int i = 0; i < 10; i++){
-            model = glm::mat4(1.0f);
-            model = glm::translate(model,cubePositions[i]);
-            model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
-            glm::mat4 transformation_matrices[3] = {model,view,projection};
-            glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
+    glBindVertexArray(test->VAO);
+    for(unsigned int i = 0; i < 10; i++){
+        model = glm::mat4(1.0f);
+        model = glm::translate(model,Positions[i]);
+        //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
+        glm::mat4 transformation_matrices[3] = {model,view,projection};
+        glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
 
-            glDrawArrays(GL_TRIANGLES,0,36);
-        }
-
-    update();
+        glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
+    }
 }
 
 void Molecule_visualization_widget::resizeGL(int w, int h)
@@ -161,28 +107,9 @@ void Molecule_visualization_widget::initializeGL()
     makeCurrent();
     initializeOpenGLFunctions();
 
-    Sphere_mesh test(4,2);
     shader_program.create_shader(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
-
-    //create VAO - vertex array object
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    //create buffer object and bind it to GL_ARRAY_BUFFER and save data to it
-    glGenBuffers(1,&VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(wierzcholki),wierzcholki,GL_STATIC_DRAW);
-
-    //set buffer attributres (how should a shader read the shit in buffer)
-    glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,6*sizeof(float),(void*)0);
-    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,6 * sizeof(float),(void*)(3* sizeof(float)));
-    glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-
-    //unbind the VBO and VAO
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER,0);
+    //create sphere object
+    test = new Sphere_object(new Sphere_mesh(16,16),glm::vec3(0.0,1.0,0.5));
 
 
     //create transformation matrces
