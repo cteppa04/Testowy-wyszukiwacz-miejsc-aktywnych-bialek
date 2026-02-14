@@ -6,7 +6,7 @@
 #include <glm/glm.hpp>
 
 #include <classes/camera.h>
-#include <classes/OpenGl/shader_wrapper.h>
+#include <classes/OpenGl/shader_object.h>
 #include <classes/OpenGl/geometry/geometry_master.h>
 #include <classes/OpenGl/objects/object_master.h>
 
@@ -27,13 +27,16 @@ protected:
     void paintGL() override;
 
     Sphere_object *test;
-    Shader_wrapper shader_program;
+    Shader_object *shader_program;
 
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
 
     CAMERA_H::Camera camera;
 signals:
+private:
+
+    GLint color_loc;
 };
 
 #endif // MOLECULE_VISUALIZATION_WIDGET_H

@@ -22,11 +22,8 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
         float yaw = 0.0;
         //insert first layer vertex
         for(uint slices_count = 0; slices_count < slices; slices_count++ ){
-            qDebug() << "Pitch: " << glm::degrees(pitch);
-            qDebug() << "Yaw: " << glm::degrees(yaw);
             glm::vec3 position = euler_to_cartesian(pitch,yaw,1.0);
             yaw += delta_yaw;
-            qDebug() << "x: " <<  position.x << "y: " << position.y <<"z: " << position.z;
             verticies.append(position.x);
             verticies.append(position.y);
             verticies.append(position.z);
@@ -37,7 +34,6 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
     //append last vertex
     verticies.append(QVector<float>{0.0,-1.0,0.0});
 
-    qDebug() << "verticies: " << verticies;
 
 
     //calculate indices -> path of each triangle;
@@ -79,6 +75,5 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
         indices.append(last_stack_start + (current_slice + 1) % slices);
         indices.append(bottom_vertex);
     }
-    qDebug() << indices;
 }
 

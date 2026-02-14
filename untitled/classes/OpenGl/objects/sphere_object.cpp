@@ -1,10 +1,11 @@
 #include "sphere_object.h"
 #include <glm/glm.hpp>
 
-Sphere_object::Sphere_object(Sphere_mesh* mesh,glm::vec3 color)
+Sphere_object::Sphere_object(Sphere_mesh* mesh,glm::vec3 color,GLfloat transparency)
 {
     initializeOpenGLFunctions();
-
+    //set transparncy
+    m_transparency = transparency;
     //set color
     m_color = color;
     //set mesh
@@ -35,4 +36,11 @@ Sphere_object::Sphere_object(Sphere_mesh* mesh,glm::vec3 color)
     glBindVertexArray(0);
     glBindBuffer(GL_ARRAY_BUFFER, 0); // optional
 
+}
+
+Sphere_object::~Sphere_object()
+{
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 }

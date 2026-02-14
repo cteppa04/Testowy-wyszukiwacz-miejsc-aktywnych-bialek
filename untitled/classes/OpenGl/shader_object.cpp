@@ -1,12 +1,17 @@
-#include "shader_wrapper.h"
+#include "shader_object.h"
 #include <QFile>
 #include <QString>
 #include <QOpenGLFunctions_3_3_Core>
 
-Shader_wrapper::Shader_wrapper() {
+Shader_object::~Shader_object()
+{
+    if(shader_ID != 0){
+        glDeleteProgram(shader_ID);
+        shader_ID = 0;
+    }
 }
 
-unsigned int Shader_wrapper::create_shader(QString vertex_shader_source, QString fragment_shader_source)
+Shader_object::Shader_object(QString vertex_shader_source, QString fragment_shader_source)
 {
     initializeOpenGLFunctions();
 
@@ -62,14 +67,18 @@ unsigned int Shader_wrapper::create_shader(QString vertex_shader_source, QString
     glAttachShader(shader_ID, fragment_shader);
     glLinkProgram(shader_ID);
 
+    glGetProgramiv(shader_ID, GL_LINK_STATUS, &succes);
+    if (!succes) {
+        glGetProgramInfoLog(shader_ID, 512, NULL, error_info);
+        qDebug() << "Program link error: " << error_info;
+    }
+
     //delete shader files
     glDeleteShader(vertex_shader);
     glDeleteShader(fragment_shader);
-
-    return shader_ID;
 }
 
-GLuint Shader_wrapper::use()
+void Shader_object::use()
 {
-    return shader_ID;
+    glUseProgram(shader_ID);
 }

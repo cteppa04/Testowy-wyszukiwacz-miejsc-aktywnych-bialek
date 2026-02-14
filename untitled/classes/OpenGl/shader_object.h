@@ -1,22 +1,22 @@
-#ifndef SHADER_WRAPPER_H
-#define SHADER_WRAPPER_H
+#ifndef SHADER_OBJECT_H
+#define SHADER_OBJECT_H
 
 #include <glm/gtc/type_ptr.hpp>
 #include <string>
 #include <QOpenGLFunctions_3_3_Core>
 
-class Shader_wrapper :protected QOpenGLFunctions_3_3_Core
+class Shader_object :protected QOpenGLFunctions_3_3_Core
 {
 public:
-    Shader_wrapper();
+    Shader_object(QString vertex_shader_source,QString fragment_shader_source);
+    ~Shader_object();
     //debugin variables
     int succes;
     char error_info[512];
 
-    unsigned int shader_ID;
-    unsigned int create_shader(QString vertex_shader_source,QString fragment_shader_source);
+    unsigned int shader_ID = 0;
 
-    GLuint use();
+    void use();
 
     // Helper functions to set uniforms
     void setBool(const std::string &name, bool value);
@@ -26,4 +26,4 @@ public:
     void setMat4(const std::string &name, const glm::mat4 &mat);
 };
 
-#endif // SHADER_WRAPPER_H
+#endif // SHADER_OBJECT_H

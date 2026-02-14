@@ -11,7 +11,7 @@ CONFIG += c++17
 SOURCES += \
     classes/OpenGl/geometry/sphere_mesh.cpp \
     classes/OpenGl/objects/sphere_object.cpp \
-    classes/OpenGl/shader_wrapper.cpp \
+    classes/OpenGl/shader_object.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
     classes/parse_file.cpp \
@@ -25,7 +25,7 @@ HEADERS += \
     classes/OpenGl/geometry/sphere_mesh.h \
     classes/OpenGl/objects/object_master.h \
     classes/OpenGl/objects/sphere_object.h \
-    classes/OpenGl/shader_wrapper.h \
+    classes/OpenGl/shader_object.h \
     classes/atom.h \
     classes/camera.h \
     classes/parse_file.h \

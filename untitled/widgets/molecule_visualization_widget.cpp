@@ -8,7 +8,7 @@
 #include <QTimer>
 #include <QKeyEvent>
 
-#include <classes/OpenGl/shader_wrapper.h>
+#include <classes/OpenGl/shader_object.h>
 #include <classes/OpenGl/geometry/geometry_master.h>
 #include <classes/OpenGl/objects/object_master.h>
 
@@ -25,6 +25,7 @@ glm::vec3 Positions[] = {
     glm::vec3( 1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
+glm::vec3 colors[10];
 
 glm::mat4 model(1.0f);
 glm::mat4 model_base(1.0f);
@@ -78,17 +79,18 @@ void Molecule_visualization_widget::paintGL()
 
 
     //use program
-    glUseProgram(shader_program.use());
+    shader_program->use();
 
     //sent matrices to shader program
     glBindVertexArray(test->VAO);
+
     for(unsigned int i = 0; i < 10; i++){
         model = glm::mat4(1.0f);
         model = glm::translate(model,Positions[i]);
         //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
         glm::mat4 transformation_matrices[3] = {model,view,projection};
         glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
-
+        glUniform3fv(color_loc,1,glm::value_ptr(colors[i]));
         glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
     }
 }
@@ -107,14 +109,23 @@ void Molecule_visualization_widget::initializeGL()
     makeCurrent();
     initializeOpenGLFunctions();
 
-    shader_program.create_shader(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
+    shader_program = new Shader_object(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
     //create sphere object
-    test = new Sphere_object(new Sphere_mesh(16,16),glm::vec3(0.0,1.0,0.5));
+    test = new Sphere_object(new Sphere_mesh(16,16),glm::vec3(0.0,1.0,0.5),1.0f);
 
 
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
-    uniform_loc = glGetUniformLocation(shader_program.use(),"transformation_matrices");
+    uniform_loc = glGetUniformLocation(shader_program->shader_ID,"transformation_matrices");
+    color_loc = glGetUniformLocation(shader_program->shader_ID, "aColor");
+
+    for(int i = 0; i < 10; i++) {
+        colors[i] = glm::vec3(
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
+            static_cast<float>(rand()) / static_cast<float>(RAND_MAX)
+            );
+    }
 
 }
 

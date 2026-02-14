@@ -8,9 +8,11 @@
 class Sphere_object : protected QOpenGLFunctions_3_3_Core
 {
 public:
-    Sphere_object(Sphere_mesh* mesh,glm::vec3 color);
+    Sphere_object(Sphere_mesh* mesh,glm::vec3 color,GLfloat transparency);
+    ~Sphere_object();
     GLuint VAO,VBO,EBO;
     glm::vec3 m_color;
+    GLfloat m_transparency;
     Sphere_mesh *m_mesh;
 private:
 };
