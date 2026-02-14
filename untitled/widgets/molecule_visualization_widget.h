@@ -36,7 +36,6 @@ protected:
 signals:
 private:
 
-    GLint color_loc;
 };
 
 #endif // MOLECULE_VISUALIZATION_WIDGET_H

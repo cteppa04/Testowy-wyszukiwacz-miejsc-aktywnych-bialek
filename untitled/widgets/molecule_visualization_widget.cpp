@@ -26,6 +26,18 @@ glm::vec3 Positions[] = {
     glm::vec3(-1.3f,  1.0f, -1.5f)
 };
 glm::vec3 colors[10];
+float transparency[10]{
+    1.0,
+    0.1,
+    0.2,
+    0.3,
+    0.4,
+    0.5,
+    0.6,
+    0.7,
+    0.8,
+    0.9
+};
 
 glm::mat4 model(1.0f);
 glm::mat4 model_base(1.0f);
@@ -89,8 +101,11 @@ void Molecule_visualization_widget::paintGL()
         model = glm::translate(model,Positions[i]);
         //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
         glm::mat4 transformation_matrices[3] = {model,view,projection};
-        glUniformMatrix4fv(uniform_loc,3,GL_FALSE,glm::value_ptr(transformation_matrices[0]));
-        glUniform3fv(color_loc,1,glm::value_ptr(colors[i]));
+        shader_program->set_mat4("model",transformation_matrices[0]);
+        shader_program->set_mat4("view",transformation_matrices[1]);
+        shader_program->set_mat4("projection",transformation_matrices[2]);
+        shader_program->set_vec3("aColor",colors[i]);
+        shader_program->set_float("aTransparency",transparency[i]);
         glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
     }
 }
@@ -116,8 +131,6 @@ void Molecule_visualization_widget::initializeGL()
 
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
-    uniform_loc = glGetUniformLocation(shader_program->shader_ID,"transformation_matrices");
-    color_loc = glGetUniformLocation(shader_program->shader_ID, "aColor");
 
     for(int i = 0; i < 10; i++) {
         colors[i] = glm::vec3(

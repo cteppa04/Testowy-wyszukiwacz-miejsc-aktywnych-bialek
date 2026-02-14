@@ -11,8 +11,10 @@ public:
     Sphere_object(Sphere_mesh* mesh,glm::vec3 color,GLfloat transparency);
     ~Sphere_object();
     GLuint VAO,VBO,EBO;
+
     glm::vec3 m_color;
     GLfloat m_transparency;
+    GLfloat m_radius;
     Sphere_mesh *m_mesh;
 private:
 };

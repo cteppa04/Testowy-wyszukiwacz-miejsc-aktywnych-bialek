@@ -82,3 +82,39 @@ void Shader_object::use()
 {
     glUseProgram(shader_ID);
 }
+
+GLint Shader_object::get_uniform_location(const std::string &name)
+{
+    if(uniform_cache.find(name) != uniform_cache.end()){
+        return uniform_cache[name];
+    }
+
+    GLint location = glGetUniformLocation(shader_ID,name.c_str());
+    uniform_cache[name] = location;
+    return location;
+}
+
+void Shader_object::set_bool(const std::string &name, bool value)
+{
+    glUniform1i(get_uniform_location(name),value);
+}
+
+void Shader_object::set_int(const std::string &name, int value)
+{
+    glUniform1i(get_uniform_location(name),value);
+}
+
+void Shader_object::set_float(const std::string &name, float value)
+{
+    glUniform1f(get_uniform_location(name),value);
+}
+
+void Shader_object::set_vec3(const std::string &name, const glm::vec3 &value)
+{
+    glUniform3fv(get_uniform_location(name),1,glm::value_ptr(value));
+}
+
+void Shader_object::set_mat4(const std::string &name, const glm::mat4 &mat)
+{
+    glUniformMatrix4fv(get_uniform_location(name),1,GL_FALSE,glm::value_ptr(mat));
+}
