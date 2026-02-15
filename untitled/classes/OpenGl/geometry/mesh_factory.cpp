@@ -1,16 +1,16 @@
-#include "sphere_mesh.h"
+#include "mesh_factory.h"
 #include <QOpenGLFunctions_3_3_Core>
 #include <QVector>
 #include <classes/position_transforms.h>
 #include <glm/glm.hpp>
 #include <QDebug>
 
-Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
+Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
 {
-
+    Mesh* mesh = new Mesh();
     //generate verticies and indices
     //add first sphere vertex
-    verticies.append(QVector<float>{0.0,1.0,0.0});
+    mesh->verticies.append(QVector<float>{0.0,1.0,0.0});
 
     //generate middle vertices
     float delta_yaw = glm::radians(360.0) / slices;
@@ -24,26 +24,25 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
         for(uint slices_count = 0; slices_count < slices; slices_count++ ){
             glm::vec3 position = euler_to_cartesian(pitch,yaw,1.0);
             yaw += delta_yaw;
-            verticies.append(position.x);
-            verticies.append(position.y);
-            verticies.append(position.z);
+            mesh->verticies.append(position.x);
+            mesh->verticies.append(position.y);
+            mesh->verticies.append(position.z);
         }
         pitch -= delta_pitch;
     }
 
     //append last vertex
-    verticies.append(QVector<float>{0.0,-1.0,0.0});
-
+    mesh->verticies.append(QVector<float>{0.0,-1.0,0.0});
 
 
     //calculate indices -> path of each triangle;
     uint top_vertex = 0;
-    uint bottom_vertex = verticies.size()/3 - 1;
+    uint bottom_vertex = mesh->verticies.size()/3 - 1;
     //top cap
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
-        indices.append(top_vertex);
-        indices.append(current_slice + 1);
-        indices.append((current_slice + 1) % slices + 1);
+        mesh->indices.append(top_vertex);
+        mesh->indices.append(current_slice + 1);
+        mesh->indices.append((current_slice + 1) % slices + 1);
     }
     //middle
 
@@ -57,13 +56,13 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
             uint c = next_stack_start + current_slice;
             uint d = next_stack_start + (current_slice + 1) % slices;
 
-            indices.append(a);
-            indices.append(c);
-            indices.append(d);
+            mesh->indices.append(a);
+            mesh->indices.append(c);
+            mesh->indices.append(d);
 
-            indices.append(a);
-            indices.append(b);
-            indices.append(d);
+            mesh->indices.append(a);
+            mesh->indices.append(b);
+            mesh->indices.append(d);
 
         }
     }
@@ -71,9 +70,11 @@ Sphere_mesh::Sphere_mesh(uint slices, uint stacks)
     //bottom cap
     uint last_stack_start = bottom_vertex - slices;
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
-        indices.append(last_stack_start + current_slice);
-        indices.append(last_stack_start + (current_slice + 1) % slices);
-        indices.append(bottom_vertex);
+        mesh->indices.append(last_stack_start + current_slice);
+        mesh->indices.append(last_stack_start + (current_slice + 1) % slices);
+        mesh->indices.append(bottom_vertex);
     }
+
+    return mesh;
 }
 

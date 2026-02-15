@@ -9,7 +9,9 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    classes/OpenGl/geometry/sphere_mesh.cpp \
+    classes/OpenGl/geometry/mesh.cpp \
+    classes/OpenGl/geometry/mesh_factory.cpp \
+    classes/OpenGl/geometry/mesh_manager.cpp \
     classes/OpenGl/objects/sphere_object.cpp \
     classes/OpenGl/shader_object.cpp \
     classes/atom.cpp \
@@ -22,7 +24,9 @@ SOURCES += \
 
 HEADERS += \
     classes/OpenGl/geometry/geometry_master.h \
-    classes/OpenGl/geometry/sphere_mesh.h \
+    classes/OpenGl/geometry/mesh.h \
+    classes/OpenGl/geometry/mesh_factory.h \
+    classes/OpenGl/geometry/mesh_manager.h \
     classes/OpenGl/objects/object_master.h \
     classes/OpenGl/objects/sphere_object.h \
     classes/OpenGl/shader_object.h \

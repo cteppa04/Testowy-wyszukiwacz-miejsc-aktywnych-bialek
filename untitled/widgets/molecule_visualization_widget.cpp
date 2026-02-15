@@ -39,6 +39,19 @@ float transparency[10]{
     0.9
 };
 
+glm::vec3 scale[10]{
+    glm::vec3(2.0),
+    glm::vec3(1.0),
+    glm::vec3(0.8),
+    glm::vec3(0.5),
+    glm::vec3(1.5),
+    glm::vec3(1.5),
+    glm::vec3(3.0),
+    glm::vec3(1.2),
+    glm::vec3(1.1),
+    glm::vec3(1.7),
+};
+
 glm::mat4 model(1.0f);
 glm::mat4 model_base(1.0f);
 glm::mat4 view(1.0f);
@@ -59,6 +72,8 @@ glm::vec3 camera_position(CAMERA_STARTING_POS);
 //time declarations
 QElapsedTimer timer;
 
+//mesh management
+Mesh_manager* mesh_manager = new Mesh_manager();
 
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -81,11 +96,12 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
 
 void Molecule_visualization_widget::paintGL()
 {
+
     view = camera.update(&keys);
 
     //clear colors in bg and enable depth testing
     glEnable(GL_DEPTH_TEST); // enable depth testing
-    glClearDepth(1.0f);
+    glEnable(GL_BLEND);
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear both color and depth
 
@@ -99,6 +115,7 @@ void Molecule_visualization_widget::paintGL()
     for(unsigned int i = 0; i < 10; i++){
         model = glm::mat4(1.0f);
         model = glm::translate(model,Positions[i]);
+        model = glm::scale(model,scale[i]);
         //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
         glm::mat4 transformation_matrices[3] = {model,view,projection};
         shader_program->set_mat4("model",transformation_matrices[0]);
@@ -126,8 +143,10 @@ void Molecule_visualization_widget::initializeGL()
 
     shader_program = new Shader_object(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
     //create sphere object
-    test = new Sphere_object(new Sphere_mesh(16,16),glm::vec3(0.0,1.0,0.5),1.0f);
 
+    //create atom mesh
+    mesh_manager->add_mesh("sphere",Mesh_factory::Sphere_mesh(16,16));
+    test = new Sphere_object(mesh_manager->get_mesh("sphere"),glm::vec3(1.0,1.0,1.0),1.0,glm::vec3(0.0,1.0,0.5),1.0f);
 
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);

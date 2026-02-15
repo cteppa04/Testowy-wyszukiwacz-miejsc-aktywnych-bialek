@@ -11,7 +11,7 @@ public:
         Orbit,
         Free
     };
-
+    bool dirty = true;
     Camera();
 
     void setType(Type type);
@@ -20,7 +20,6 @@ public:
     void start(const glm::vec3 *camera_starting_position);
 
     glm::mat4 update(QSet<int> *keys);
-
 
     glm::mat4 m_view_matrix = glm::mat4(1.0f);
     glm::vec3 m_camera_position = glm::vec3(0.0f,0.0f,0.0f);

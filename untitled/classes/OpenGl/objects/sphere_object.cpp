@@ -1,9 +1,13 @@
 #include "sphere_object.h"
 #include <glm/glm.hpp>
 
-Sphere_object::Sphere_object(Sphere_mesh* mesh,glm::vec3 color,GLfloat transparency)
+Sphere_object::Sphere_object(Mesh* mesh,glm::vec3 position,float radius,glm::vec3 color,GLfloat transparency)
 {
     initializeOpenGLFunctions();
+    //set position
+    m_position = position;
+    //set radius
+    m_radius = radius;
     //set transparncy
     m_transparency = transparency;
     //set color
