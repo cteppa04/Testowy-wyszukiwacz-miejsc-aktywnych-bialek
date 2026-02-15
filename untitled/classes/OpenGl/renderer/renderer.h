@@ -3,12 +3,12 @@
 
 #include <QOpenGLFunctions_3_3_Core>
 #include <QVector>
-#include <classes/OpenGl/geometry/mesh.h>
 
 class Renderer : private QOpenGLFunctions_3_3_Core
 {
 public:
-    Renderer(Mesh* mesh);
+    Renderer(QVector<float>* verticies,QVector<uint>* indices);
+    ~Renderer();
     GLuint VAO,VBO,EBO;
 };
 

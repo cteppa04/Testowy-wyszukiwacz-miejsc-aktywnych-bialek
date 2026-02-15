@@ -75,6 +75,7 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
         mesh->indices.append(bottom_vertex);
     }
 
+    mesh->renderer = new Renderer(&mesh->verticies,&mesh->indices);
     return mesh;
 }
 

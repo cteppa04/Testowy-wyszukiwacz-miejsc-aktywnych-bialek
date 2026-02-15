@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <QVector>
+#include <classes/OpenGl/renderer/renderer.h>
 
 class Mesh
 {
@@ -11,6 +12,7 @@ public:
 
     QVector<float> verticies;
     QVector<uint> indices;
+    Renderer* renderer;
 };
 
 #endif // MESH_H
