@@ -11,8 +11,12 @@ CONFIG += c++17
 SOURCES += \
     classes/OpenGl/geometry/mesh.cpp \
     classes/OpenGl/geometry/mesh_factory.cpp \
-    classes/OpenGl/geometry/mesh_manager.cpp \
+    classes/OpenGl/material/material.cpp \
+    classes/OpenGl/material/material_factory.cpp \
+    classes/OpenGl/objects/object.cpp \
+    classes/OpenGl/objects/object_factory.cpp \
     classes/OpenGl/objects/sphere_object.cpp \
+    classes/OpenGl/renderer/renderer.cpp \
     classes/OpenGl/shader_object.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
@@ -26,9 +30,15 @@ HEADERS += \
     classes/OpenGl/geometry/geometry_master.h \
     classes/OpenGl/geometry/mesh.h \
     classes/OpenGl/geometry/mesh_factory.h \
-    classes/OpenGl/geometry/mesh_manager.h \
+    classes/OpenGl/material/material.h \
+    classes/OpenGl/material/material_factory.h \
+    classes/OpenGl/material/material_master.h \
+    classes/OpenGl/objects/object.h \
+    classes/OpenGl/objects/object_factory.h \
     classes/OpenGl/objects/object_master.h \
     classes/OpenGl/objects/sphere_object.h \
+    classes/OpenGl/renderer/renderer.h \
+    classes/OpenGl/resource_manager.h \
     classes/OpenGl/shader_object.h \
     classes/atom.h \
     classes/camera.h \

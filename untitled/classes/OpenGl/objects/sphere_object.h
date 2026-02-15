@@ -1,7 +1,7 @@
 #ifndef SPHERE_OBJECT_H
 #define SPHERE_OBJECT_H
 
-#include <classes/OpenGl/geometry/mesh_factory.h>
+#include <classes/OpenGl/geometry/mesh.h>
 #include <QOpenGLFunctions_3_3_Core>
 #include <glm/glm.hpp>
 

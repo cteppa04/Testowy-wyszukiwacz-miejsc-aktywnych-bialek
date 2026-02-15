@@ -1,4 +1,5 @@
 #include "widgets/molecule_visualization_widget.h"
+#include "classes/OpenGl/objects/object_factory.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -10,7 +11,10 @@
 
 #include <classes/OpenGl/shader_object.h>
 #include <classes/OpenGl/geometry/geometry_master.h>
+#include <classes/OpenGl/material/material_master.h>
+#include <classes/OpenGl/objects/object.h>
 #include <classes/OpenGl/objects/object_master.h>
+#include <classes/OpenGl/resource_manager.h>
 
 
 glm::vec3 Positions[] = {
@@ -39,17 +43,17 @@ float transparency[10]{
     0.9
 };
 
-glm::vec3 scale[10]{
-    glm::vec3(2.0),
-    glm::vec3(1.0),
-    glm::vec3(0.8),
-    glm::vec3(0.5),
-    glm::vec3(1.5),
-    glm::vec3(1.5),
-    glm::vec3(3.0),
-    glm::vec3(1.2),
-    glm::vec3(1.1),
-    glm::vec3(1.7),
+float scale[10]{
+    2.0,
+    1.0,
+    0.8,
+    0.5,
+    1.5,
+    1.5,
+    3.0,
+    1.2,
+    1.1,
+    1.7
 };
 
 glm::mat4 model(1.0f);
@@ -73,7 +77,9 @@ glm::vec3 camera_position(CAMERA_STARTING_POS);
 QElapsedTimer timer;
 
 //mesh management
-Mesh_manager* mesh_manager = new Mesh_manager();
+Resource_manager<Mesh> mesh_manager;
+Resource_manager<Material> material_manager;
+Resource_manager<Object> object_manager;
 
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
@@ -112,19 +118,19 @@ void Molecule_visualization_widget::paintGL()
     //sent matrices to shader program
     glBindVertexArray(test->VAO);
 
-    for(unsigned int i = 0; i < 10; i++){
-        model = glm::mat4(1.0f);
-        model = glm::translate(model,Positions[i]);
-        model = glm::scale(model,scale[i]);
-        //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
-        glm::mat4 transformation_matrices[3] = {model,view,projection};
-        shader_program->set_mat4("model",transformation_matrices[0]);
-        shader_program->set_mat4("view",transformation_matrices[1]);
-        shader_program->set_mat4("projection",transformation_matrices[2]);
-        shader_program->set_vec3("aColor",colors[i]);
-        shader_program->set_float("aTransparency",transparency[i]);
-        glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
-    }
+    // for(unsigned int i = 0; i < 10; i++){
+    //     model = glm::mat4(1.0f);
+    //     model = glm::translate(model,Positions[i]);
+    //     model = glm::scale(model,scale[i]);
+    //     //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
+    //     glm::mat4 transformation_matrices[3] = {model,view,projection};
+    //     shader_program->set_mat4("model",transformation_matrices[0]);
+    //     shader_program->set_mat4("view",transformation_matrices[1]);
+    //     shader_program->set_mat4("projection",transformation_matrices[2]);
+    //     shader_program->set_vec3("aColor",colors[i]);
+    //     shader_program->set_float("aTransparency",transparency[i]);
+    //     glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
+    // }
 }
 
 void Molecule_visualization_widget::resizeGL(int w, int h)
@@ -144,10 +150,20 @@ void Molecule_visualization_widget::initializeGL()
     shader_program = new Shader_object(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
     //create sphere object
 
-    //create atom mesh
-    mesh_manager->add_mesh("sphere",Mesh_factory::Sphere_mesh(16,16));
-    test = new Sphere_object(mesh_manager->get_mesh("sphere"),glm::vec3(1.0,1.0,1.0),1.0,glm::vec3(0.0,1.0,0.5),1.0f);
+    //create atom object
+    mesh_manager.add("sphere",Mesh_factory::Sphere_mesh(16,16));
+    material_manager.add("smooth",Material_factory::smooth_material(glm::vec3(1.0,0.0,0.0),1.0));
+    for(unsigned int i = 0; i < 10; i++){
+        std::string name = "sphere";
+        name += i;
+        object_manager.add(name,Object_factory::sphere(mesh_manager.get("sphere"),
+                                                        material_manager.get("smooth"),
+                                                        scale[i],
+                                                        Positions[i]));
+    }
 
+    test = new Sphere_object(mesh_manager.get("sphere"),glm::vec3(1.0,1.0,1.0),1.0,material_manager.get("smooth")->color,material_manager.get("smooth")->transparency);
+    qDebug() << mesh_manager.get("sphere")->verticies;
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
 

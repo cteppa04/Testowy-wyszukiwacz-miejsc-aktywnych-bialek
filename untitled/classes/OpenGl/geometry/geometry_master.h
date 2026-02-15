@@ -3,6 +3,5 @@
 
 #include <classes/OpenGl/geometry/mesh_factory.h>
 #include <classes/OpenGl/geometry/mesh.h>
-#include <classes/OpenGl/geometry/mesh_manager.h>
 
 #endif // GEOMETRY_MASTER_H
