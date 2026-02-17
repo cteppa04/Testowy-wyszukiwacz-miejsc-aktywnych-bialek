@@ -9,7 +9,7 @@ class Mesh
 {
 public:
     Mesh();
-
+    ~Mesh();
     QVector<float> verticies;
     QVector<uint> indices;
     Renderer* renderer;

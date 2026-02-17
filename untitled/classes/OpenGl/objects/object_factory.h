@@ -9,7 +9,7 @@
 
 namespace Object_factory
 {
-    Object* sphere(Mesh* mesh,Material* material,float radius,glm::vec3 position);
+    Object* sphere(Mesh* mesh,Material* material);
 };
 
 #endif // OBJECT_FACTORY_H

@@ -1,6 +1,7 @@
 #ifndef MOLECULE_VISUALIZATION_WIDGET_H
 #define MOLECULE_VISUALIZATION_WIDGET_H
 
+#include "classes/OpenGl/resource_manager.h"
 #include <QtOpenGLWidgets/QOpenGLWidget>
 #include <QOpenGLFunctions_3_3_Core>
 #include <glm/glm.hpp>
@@ -25,9 +26,15 @@ protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
     void paintGL() override;
-
-    Sphere_object *test;
     Shader_object *shader_program;
+
+    //managers
+    Resource_manager<Mesh> mesh_manager;
+    Resource_manager<Material> material_manager;
+    Resource_manager<Object> object_manager;
+
+    //initialise atom colors
+    void register_standard_atom_materials(Resource_manager<Material>& material_manager);
 
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;

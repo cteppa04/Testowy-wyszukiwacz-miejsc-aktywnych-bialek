@@ -37,7 +37,7 @@ QVector<Atom> Parse_file::parse_PDB(const QString &file_path)
 
         QString element = line.mid(76, 2).trimmed();
 
-        QVector3D position(x, y, z);
+        glm::vec3 position(x, y, z);
         //add atom to list
         atoms.append(Atom(serial, position,element));
     }

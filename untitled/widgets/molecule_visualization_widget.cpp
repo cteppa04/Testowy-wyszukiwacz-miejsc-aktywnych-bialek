@@ -1,4 +1,4 @@
-#include "widgets/molecule_visualization_widget.h"
+#include <widgets/molecule_visualization_widget.h>
 #include "classes/OpenGl/objects/object_factory.h"
 
 #include <glm/glm.hpp>
@@ -13,54 +13,36 @@
 #include <classes/OpenGl/geometry/geometry_master.h>
 #include <classes/OpenGl/material/material_master.h>
 #include <classes/OpenGl/objects/object.h>
-#include <classes/OpenGl/objects/object_master.h>
 #include <classes/OpenGl/resource_manager.h>
 
-
-glm::vec3 Positions[] = {
-    glm::vec3( 0.0f,  0.0f,  0.0f),
-    glm::vec3( 2.0f,  5.0f, -15.0f),
-    glm::vec3(-1.5f, -2.2f, -2.5f),
-    glm::vec3(-3.8f, -2.0f, -12.3f),
-    glm::vec3( 2.4f, -0.4f, -3.5f),
-    glm::vec3(-1.7f,  3.0f, -7.5f),
-    glm::vec3( 1.3f, -2.0f, -2.5f),
-    glm::vec3( 1.5f,  2.0f, -2.5f),
-    glm::vec3( 1.5f,  0.2f, -1.5f),
-    glm::vec3(-1.3f,  1.0f, -1.5f)
-};
-glm::vec3 colors[10];
-float transparency[10]{
-    1.0,
-    0.1,
-    0.2,
-    0.3,
-    0.4,
-    0.5,
-    0.6,
-    0.7,
-    0.8,
-    0.9
+//molecule colors
+std::map<std::string, glm::vec3> element_colors = {
+    {"H",  glm::vec3(1.0f, 1.0f, 1.0f)},   // White
+    {"C",  glm::vec3(0.2f, 0.2f, 0.2f)},   // Dark gray
+    {"N",  glm::vec3(0.0f, 0.0f, 1.0f)},   // Blue
+    {"O",  glm::vec3(1.0f, 0.0f, 0.0f)},   // Red
+    {"S",  glm::vec3(1.0f, 1.0f, 0.0f)},   // Yellow
+    {"Se", glm::vec3(1.0f, 0.6f, 0.0f)},   // Orange
+    {"P",  glm::vec3(1.0f, 0.5f, 0.0f)},   // Orange
+    {"Cl", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
+    {"Na", glm::vec3(0.5f, 0.5f, 1.0f)},   // Light blue
+    {"K",  glm::vec3(0.5f, 0.0f, 1.0f)},   // Purple
+    {"Ca", glm::vec3(0.5f, 0.5f, 0.0f)},   // Dark yellow
+    {"Mg", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
+    {"Fe", glm::vec3(0.8f, 0.4f, 0.0f)},   // Brown/Orange
+    {"Cu", glm::vec3(1.0f, 0.5f, 0.5f)},   // Pink
+    {"Zn", glm::vec3(0.5f, 0.5f, 0.5f)},   // Gray
+    {"Co", glm::vec3(0.0f, 0.0f, 0.5f)},   // Dark blue
+    {"I",  glm::vec3(0.58f, 0.0f, 0.58f)}  // Purple
 };
 
-float scale[10]{
-    2.0,
-    1.0,
-    0.8,
-    0.5,
-    1.5,
-    1.5,
-    3.0,
-    1.2,
-    1.1,
-    1.7
-};
 
-glm::mat4 model(1.0f);
-glm::mat4 model_base(1.0f);
+
+
+
+
 glm::mat4 view(1.0f);
 glm::mat4 projection(1.0f);
-GLuint uniform_loc = 0;
 
 //keyboard input array
 QSet<int> keys;
@@ -68,27 +50,17 @@ QSet<int> keys;
 //origin point camera initialization
 
 const glm::vec3 CAMERA_STARTING_POS(0.0f,0.0f,10.0f);
-
 glm::vec3 orbit_camera_orbit_point (0.0f,0.0f,0.0f);
-
 glm::vec3 camera_position(CAMERA_STARTING_POS);
 
-//time declarations
-QElapsedTimer timer;
-
 //mesh management
-Resource_manager<Mesh> mesh_manager;
-Resource_manager<Material> material_manager;
-Resource_manager<Object> object_manager;
+
 
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
 {
     setFocusPolicy(Qt::StrongFocus); // widget can accept keyboard focus
     setFocus(); // actively give it focus
-
-    timer.start();
-    //start the camera
 
     camera.setType(CAMERA_H::Camera::Type::Orbit);
     camera.start(&CAMERA_STARTING_POS);
@@ -99,6 +71,39 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     timer_refresh->start(16); // ~60 FPS
 }
 
+void Molecule_visualization_widget::register_standard_atom_materials(Resource_manager<Material> &material_manager)
+{
+    // Map of element symbol to color
+    std::map<std::string, glm::vec3> element_colors = {
+        {"H",  glm::vec3(1.0f, 1.0f, 1.0f)},   // White
+        {"C",  glm::vec3(0.2f, 0.2f, 0.2f)},   // Dark gray
+        {"N",  glm::vec3(0.0f, 0.0f, 1.0f)},   // Blue
+        {"O",  glm::vec3(1.0f, 0.0f, 0.0f)},   // Red
+        {"S",  glm::vec3(1.0f, 1.0f, 0.0f)},   // Yellow
+        {"Se", glm::vec3(1.0f, 0.6f, 0.0f)},   // Orange
+        {"P",  glm::vec3(1.0f, 0.5f, 0.0f)},   // Orange
+        {"Cl", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
+        {"Na", glm::vec3(0.5f, 0.5f, 1.0f)},   // Light blue
+        {"K",  glm::vec3(0.5f, 0.0f, 1.0f)},   // Purple
+        {"Ca", glm::vec3(0.5f, 0.5f, 0.0f)},   // Dark yellow
+        {"Mg", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
+        {"Fe", glm::vec3(0.8f, 0.4f, 0.0f)},   // Brown/Orange
+        {"Cu", glm::vec3(1.0f, 0.5f, 0.5f)},   // Pink
+        {"Zn", glm::vec3(0.5f, 0.5f, 0.5f)},   // Gray
+        {"Co", glm::vec3(0.0f, 0.0f, 0.5f)},   // Dark blue
+        {"I",  glm::vec3(0.58f, 0.0f, 0.58f)}  // Purple
+    };
+
+    // Loop through and add each element to the material manager
+    for (auto const& pair : element_colors) {
+        const std::string& element = pair.first;
+        const glm::vec3& color = pair.second;
+
+        material_manager.add(element,
+                             Material_factory::smooth_material(color, 1.0f)  // full opacity
+                             );
+    }
+}
 
 void Molecule_visualization_widget::paintGL()
 {
@@ -116,22 +121,19 @@ void Molecule_visualization_widget::paintGL()
     shader_program->use();
 
     //sent matrices to shader program
-    glBindVertexArray(test->VAO);
+    //glBindVertexArray(object_manager.get("atom")->mesh->renderer->VAO);
 
-    // for(unsigned int i = 0; i < 10; i++){
-    //     model = glm::mat4(1.0f);
-    //     model = glm::translate(model,Positions[i]);
-    //     model = glm::scale(model,scale[i]);
-    //     //model = glm::rotate(model,glm::radians(timer.elapsed()/10.f),glm::vec3(0.0,1.0,0.0));
-    //     glm::mat4 transformation_matrices[3] = {model,view,projection};
-    //     shader_program->set_mat4("model",transformation_matrices[0]);
+    // for(int i = 0; i < object_manager.get("atom")->instances.size(); i++){
+    //     glm::mat4 transformation_matrices[3] = {object_manager.get("atom")->instances[i].m_model,view,projection};\
+    //         shader_program->set_mat4("model",transformation_matrices[0]);
     //     shader_program->set_mat4("view",transformation_matrices[1]);
     //     shader_program->set_mat4("projection",transformation_matrices[2]);
-    //     shader_program->set_vec3("aColor",colors[i]);
-    //     shader_program->set_float("aTransparency",transparency[i]);
-    //     glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(test->m_mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
+    //     shader_program->set_vec3("aColor",object_manager.get("atom")->material->color);
+    //     shader_program->set_float("aTransparency",object_manager.get("atom")->material->transparency);
+    //     glDrawElements(GL_TRIANGLES,static_cast<GLsizei>(object_manager.get("atom")->mesh->indices.size()),GL_UNSIGNED_INT,nullptr);
     // }
 }
+
 
 void Molecule_visualization_widget::resizeGL(int w, int h)
 {
@@ -148,32 +150,11 @@ void Molecule_visualization_widget::initializeGL()
     initializeOpenGLFunctions();
 
     shader_program = new Shader_object(":/resources/shaders/testShader.vert",":/resources/shaders/testShader2.fsh");
-    //create sphere object
+    register_standard_atom_materials(material_manager);
 
-    //create atom object
-    mesh_manager.add("sphere",Mesh_factory::Sphere_mesh(16,16));
-    material_manager.add("smooth",Material_factory::smooth_material(glm::vec3(1.0,0.0,0.0),1.0));
-    for(unsigned int i = 0; i < 10; i++){
-        std::string name = "sphere";
-        name += i;
-        object_manager.add(name,Object_factory::sphere(mesh_manager.get("sphere"),
-                                                        material_manager.get("smooth"),
-                                                        scale[i],
-                                                        Positions[i]));
-    }
-
-    test = new Sphere_object(mesh_manager.get("sphere"),glm::vec3(1.0,1.0,1.0),1.0,material_manager.get("smooth")->color,material_manager.get("smooth")->transparency);
-    qDebug() << mesh_manager.get("sphere")->verticies;
     //create transformation matrces
     projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
 
-    for(int i = 0; i < 10; i++) {
-        colors[i] = glm::vec3(
-            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
-            static_cast<float>(rand()) / static_cast<float>(RAND_MAX),
-            static_cast<float>(rand()) / static_cast<float>(RAND_MAX)
-            );
-    }
 
 }
 

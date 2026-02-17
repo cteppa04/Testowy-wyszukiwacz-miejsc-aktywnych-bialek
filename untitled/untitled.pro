@@ -15,16 +15,20 @@ SOURCES += \
     classes/OpenGl/material/material_factory.cpp \
     classes/OpenGl/objects/object.cpp \
     classes/OpenGl/objects/object_factory.cpp \
-    classes/OpenGl/objects/sphere_object.cpp \
+    classes/OpenGl/objects/object_instance.cpp \
     classes/OpenGl/renderer/renderer.cpp \
     classes/OpenGl/shader_object.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
     classes/parse_file.cpp \
+    classes/protein.cpp \
     includes/glm/detail/glm.cpp \
     main.cpp \
     mainwindow.cpp \
-    widgets/molecule_visualization_widget.cpp
+    widgets/animation_widget.cpp \
+    widgets/molecule_visualization_widget.cpp \
+    widgets/protein_list.cpp \
+    widgets/protein_list_item.cpp
 
 HEADERS += \
     classes/OpenGl/geometry/geometry_master.h \
@@ -35,8 +39,8 @@ HEADERS += \
     classes/OpenGl/material/material_master.h \
     classes/OpenGl/objects/object.h \
     classes/OpenGl/objects/object_factory.h \
+    classes/OpenGl/objects/object_instance.h \
     classes/OpenGl/objects/object_master.h \
-    classes/OpenGl/objects/sphere_object.h \
     classes/OpenGl/renderer/renderer.h \
     classes/OpenGl/resource_manager.h \
     classes/OpenGl/shader_object.h \
@@ -44,6 +48,7 @@ HEADERS += \
     classes/camera.h \
     classes/parse_file.h \
     classes/position_transforms.h \
+    classes/protein.h \
     includes/glm/common.hpp \
     includes/glm/detail/_fixes.hpp \
     includes/glm/detail/_noise.hpp \
@@ -475,7 +480,10 @@ HEADERS += \
     includes/glm/vec4.hpp \
     includes/glm/vector_relational.hpp \
     mainwindow.h \
-    widgets/molecule_visualization_widget.h
+    widgets/animation_widget.h \
+    widgets/molecule_visualization_widget.h \
+    widgets/protein_list.h \
+    widgets/protein_list_item.h
 
 FORMS += \
     mainwindow.ui

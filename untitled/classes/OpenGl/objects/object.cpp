@@ -5,7 +5,7 @@ Object::Object()
 
 }
 
-Object::~Object()
+void Object::add_instance(Object_instance instance)
 {
-    delete renderer;
+    instances.append(instance);
 }

@@ -5,33 +5,27 @@
 #include <QMessageBox>
 #include "classes/atom.h"
 #include "classes/parse_file.h"
+#include "qboxlayout.h"
+#include "qpushbutton.h"
+#include <widgets/protein_list.h>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    QHBoxLayout* layout = new QHBoxLayout(ui->centralWidget);
+
+    list = new Protein_list(this);
+    animation_widget = new Animation_widget(this);
+
+    layout->addWidget(list,3);
+    layout->addWidget(animation_widget,7);
+
+    ui->centralWidget->setLayout(layout);
 }
 
 MainWindow::~MainWindow()
 {
     delete ui;
-}
-
-void MainWindow::on_addButton_clicked()
-{
-    QString file_name = QFileDialog::getOpenFileName(this,
-                                                     "Prosze wybrac plik",
-                                                     QDir::homePath(),
-                                                     "PDB Files (*.pdb);;All Files (*)",
-                                                     nullptr,
-                                                     QFileDialog::DontUseNativeDialog);
-    QVector<Atom> atomy = Parse_file::parse_PDB(file_name);
-    QString allAtomsString;
-    //create atom string for test purposes
-    for(const Atom &x : atomy){
-        allAtomsString += QString::number(x.serial)+": " + x.element;
-    }
-    QMessageBox::information(this,"..",allAtomsString);
-
 }

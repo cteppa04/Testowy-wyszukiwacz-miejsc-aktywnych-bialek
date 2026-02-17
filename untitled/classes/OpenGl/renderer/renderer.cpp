@@ -1,7 +1,7 @@
 #include "renderer.h"
 
 
-Renderer::Renderer(QVector<float> *verticies,QVector<uint> *indices)
+Renderer::Renderer(QVector<float> *verticies, QVector<uint> *indices)
 {
     initializeOpenGLFunctions();
 
