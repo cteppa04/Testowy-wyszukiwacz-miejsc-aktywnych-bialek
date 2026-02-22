@@ -11,13 +11,13 @@ CONFIG += c++17
 SOURCES += \
     classes/OpenGl/geometry/mesh.cpp \
     classes/OpenGl/geometry/mesh_factory.cpp \
+    classes/OpenGl/instance/object_instance.cpp \
     classes/OpenGl/material/material.cpp \
     classes/OpenGl/material/material_factory.cpp \
     classes/OpenGl/objects/object.cpp \
     classes/OpenGl/objects/object_factory.cpp \
-    classes/OpenGl/objects/object_instance.cpp \
     classes/OpenGl/renderer/renderer.cpp \
-    classes/OpenGl/shader_object.cpp \
+    classes/OpenGl/shaders/shader_object.cpp \
     classes/atom.cpp \
     classes/camera.cpp \
     classes/parse_file.cpp \
@@ -34,16 +34,16 @@ HEADERS += \
     classes/OpenGl/geometry/geometry_master.h \
     classes/OpenGl/geometry/mesh.h \
     classes/OpenGl/geometry/mesh_factory.h \
+    classes/OpenGl/instance/object_instance.h \
     classes/OpenGl/material/material.h \
     classes/OpenGl/material/material_factory.h \
     classes/OpenGl/material/material_master.h \
     classes/OpenGl/objects/object.h \
     classes/OpenGl/objects/object_factory.h \
-    classes/OpenGl/objects/object_instance.h \
     classes/OpenGl/objects/object_master.h \
     classes/OpenGl/renderer/renderer.h \
     classes/OpenGl/resource_manager.h \
-    classes/OpenGl/shader_object.h \
+    classes/OpenGl/shaders/shader_object.h \
     classes/atom.h \
     classes/camera.h \
     classes/parse_file.h \

@@ -1,11 +1,11 @@
 #include "material_factory.h"
 
 
-Material *Material_factory::smooth_material(glm::vec3 color, float transparency)
+Material *Material_factory::material(Shader_object *shader)
 {
     Material* material = new Material();
-    material->color = color;
-    material->transparency = transparency;
+    material->m_shader = shader;
+
 
     return material;
 }

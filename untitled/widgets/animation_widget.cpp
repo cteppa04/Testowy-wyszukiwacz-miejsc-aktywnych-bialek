@@ -26,3 +26,10 @@ Animation_widget::Animation_widget(QWidget *parent):
     main_layout->addLayout(buttons_layout,3);
 
 }
+
+void Animation_widget::render_protein(Protein *protein)
+{
+    m_visualizator->delete_protein();
+    m_visualizator->add_protein(protein);
+    m_animation_step_label->setText(protein->m_name);
+}

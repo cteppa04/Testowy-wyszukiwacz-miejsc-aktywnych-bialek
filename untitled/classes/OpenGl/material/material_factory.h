@@ -4,7 +4,7 @@
 #include <classes/OpenGl/material/material.h>
 namespace Material_factory
 {
-    Material* smooth_material(glm::vec3 color,float transparency);
+    Material* material(Shader_object *shader);
 };
 
 #endif // MATERIAL_FACTORY_H

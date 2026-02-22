@@ -19,6 +19,10 @@ MainWindow::MainWindow(QWidget *parent)
     list = new Protein_list(this);
     animation_widget = new Animation_widget(this);
 
+    list->connect(list,
+            &Protein_list::render_protein,
+            animation_widget,
+            &Animation_widget::render_protein);
     layout->addWidget(list,3);
     layout->addWidget(animation_widget,7);
 

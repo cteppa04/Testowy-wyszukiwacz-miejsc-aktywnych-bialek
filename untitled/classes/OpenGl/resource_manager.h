@@ -19,6 +19,12 @@ public:
         for (auto& pair : m_resources)
             delete pair.second;
     }
+    template<typename Function>
+    void for_each(Function function){
+        for(const auto& pair : m_resources){
+            function(pair.first,pair.second);
+        }
+    }
 
     void add(const std::string& name, T* resource)
     {
@@ -47,6 +53,25 @@ public:
     bool exists(const std::string& name) const
     {
         return m_resources.find(name) != m_resources.end();
+    }
+
+    void remove(const std::string &name){
+        auto it = m_resources.find(name);
+        if(it == m_resources.end()){
+            qDebug() << "Resource doesn't exist.";
+            return;
+        }
+        delete it->second;
+
+        qDebug() << "Deleted: "<< m_resources.erase(it) <<
+            "Resources";
+    }
+
+    void clear(){
+        for(const auto& pair : m_resources){
+            delete pair.second;
+        }
+        m_resources.clear();
     }
 };
 

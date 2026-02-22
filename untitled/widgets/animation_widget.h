@@ -6,12 +6,15 @@
 #include "widgets/molecule_visualization_widget.h"
 #include <QObject>
 #include <QWidget>
+#include <classes/protein.h>
 
 class Animation_widget : public QWidget
 {
     Q_OBJECT
 public:
     Animation_widget(QWidget *parent = nullptr);
+public slots:
+    void render_protein(Protein *protein);
 private:
     QLabel *m_animation_step_label;
     Molecule_visualization_widget *m_visualizator;
