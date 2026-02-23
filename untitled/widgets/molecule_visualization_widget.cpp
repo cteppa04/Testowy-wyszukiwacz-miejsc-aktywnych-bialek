@@ -32,13 +32,11 @@ glm::vec3 camera_position(CAMERA_STARTING_POS);
 Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
     : QOpenGLWidget(parent)
 {
-    // //handle keyboard clicking
-    // setFocusPolicy(Qt::StrongFocus); // widget can accept keyboard focus
-    // setFocus(); // actively give it focus
 
     //handle camera
-    camera.setType(CAMERA_H::Camera::Type::Orbit);
-    camera.start(&CAMERA_STARTING_POS);
+    camera.setType(CAMERA_H::Camera::Type::Free);
+    camera.set_camera_position(glm::vec3(0.0,0.0,10.0));
+    camera.start();
     camera.set_camera_orbit_point(orbit_camera_orbit_point);
 
     //set fps
@@ -50,6 +48,8 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
 
 void Molecule_visualization_widget::add_protein(Protein *protein)
 {
+    glm::vec3 avg_pos(0.0);
+
     for(int i = 0;i < protein->m_atom_list.count();++i){
         auto atom = protein->m_atom_list[i];
         qDebug() << atom.m_element.toStdString();
@@ -65,21 +65,33 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
             }
         }
 
-        auto it = elements_colors.find(key);
-        auto color = it->second;
-        qDebug() << "Color: " << color.x << color.y << color.z;
+        auto it = elements_data.find(key);
+        glm::vec3 color = {1.0f, 0.0f, 1.0f}; // fallback magenta
+        float radius = 1.5f;
+
+        color = it->second.color;
         auto model = glm::mat4(1.0f);
         model = glm::translate(model,atom.m_position);
-        model = glm::scale(model,glm::vec3(0.5f));
-        atoms->add_instance(model,color,1.0f);
-        qDebug() << protein->m_atom_list[i].m_position.x << protein->m_atom_list[i].m_position.y << protein->m_atom_list[i].m_position.z;
+        model = glm::scale(model,glm::vec3(it->second.vdw_radius));
+        vdw_radius->add_instance(model,color,0.5f);
+
+        avg_pos += atom.m_position;
+
+        model = glm::mat4(1.0);
+        model = glm::translate(model,atom.m_position);
+        model = glm::scale(model,glm::vec3(0.25f));
+        cores->add_instance(model,glm::vec3(0,0,0),1.0f);
     }
-    atoms->updateGPU();
+    avg_pos /= protein->m_atom_list.count();
+    camera.set_camera_direction(avg_pos);
+    vdw_radius->updateGPU();
+    cores->updateGPU();
 }
 
 void Molecule_visualization_widget::delete_protein()
 {
-    atoms->clear();
+    cores->clear();
+    vdw_radius->clear();
 }
 
 
@@ -101,9 +113,11 @@ void Molecule_visualization_widget::paintGL()
     object_manager.get("atom")->material->m_shader->set_mat4("view",view);
     object_manager.get("atom")->material->m_shader->set_mat4("projection",projection);
     //render
-    glBindVertexArray(object_manager.get("atom")->mesh->renderer->VAO);
-    glDrawElementsInstanced(GL_TRIANGLES,object_manager.get("atom")->mesh->indices.count(),GL_UNSIGNED_INT,0,atoms->instance_count());
 
+    glBindVertexArray(cores->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,object_manager.get("atom")->mesh->indices.count(),GL_UNSIGNED_INT,0,cores->instance_count());
+    glBindVertexArray(vdw_radius->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,object_manager.get("atom")->mesh->indices.count(),GL_UNSIGNED_INT,0,vdw_radius->instance_count());
 }
 
 
@@ -135,7 +149,8 @@ void Molecule_visualization_widget::initializeGL()
     object_manager.add("atom",Object_factory::sphere(mesh_manager.get("atom_sphere"),
                                               material_manager.get("smooth")));
     //setup atoms
-    atoms = new Object_instance(object_manager.get("atom"));
+    cores = new Object_instance(object_manager.get("atom"));
+    vdw_radius = new Object_instance(object_manager.get("atom"));
 }
 
 //keyboard key handling

@@ -19,6 +19,7 @@ public:
 
     void updateGPU();
 
+    GLuint VAO;
 private:
     QVector<glm::mat4> m_models;
     QVector<glm::vec4> m_colors;

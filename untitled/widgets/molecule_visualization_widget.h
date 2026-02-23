@@ -37,7 +37,8 @@ protected:
     Resource_manager<Material> material_manager;
     Resource_manager<Shader_object> shader_manager;
     Resource_manager<Object> object_manager;
-    Object_instance *atoms;
+    Object_instance *cores;
+    Object_instance *vdw_radius;
 
     //initialise atom colors
     void keyPressEvent(QKeyEvent *event) override;
@@ -45,24 +46,30 @@ protected:
     void showEvent(QShowEvent *event) override;
 
     CAMERA_H::Camera camera;
-    std::map<std::string, glm::vec3> elements_colors = {
-        {"H",  glm::vec3(1.0f, 1.0f, 1.0f)},   // White
-        {"C",  glm::vec3(0.2f, 0.2f, 0.2f)},   // Dark gray
-        {"N",  glm::vec3(0.0f, 0.0f, 1.0f)},   // Blue
-        {"O",  glm::vec3(1.0f, 0.0f, 0.0f)},   // Red
-        {"S",  glm::vec3(1.0f, 1.0f, 0.0f)},   // Yellow
-        {"Se", glm::vec3(1.0f, 0.6f, 0.0f)},   // Orange
-        {"P",  glm::vec3(1.0f, 0.5f, 0.0f)},   // Orange
-        {"Cl", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
-        {"Na", glm::vec3(0.5f, 0.5f, 1.0f)},   // Light blue
-        {"K",  glm::vec3(0.5f, 0.0f, 1.0f)},   // Purple
-        {"Ca", glm::vec3(0.5f, 0.5f, 0.0f)},   // Dark yellow
-        {"Mg", glm::vec3(0.0f, 1.0f, 0.0f)},   // Green
-        {"Fe", glm::vec3(0.8f, 0.4f, 0.0f)},   // Brown/Orange
-        {"Cu", glm::vec3(1.0f, 0.5f, 0.5f)},   // Pink
-        {"Zn", glm::vec3(0.5f, 0.5f, 0.5f)},   // Gray
-        {"Co", glm::vec3(0.0f, 0.0f, 0.5f)},   // Dark blue
-        {"I",  glm::vec3(0.58f, 0.0f, 0.58f)}  // Purple
+
+    struct Element_data {
+        glm::vec3 color;
+        float vdw_radius;
+    };
+
+    std::map<std::string, Element_data> elements_data = {
+    {"H",  {{1.0f, 1.0f, 1.0f}, 1.20f}},  // White
+    {"C",  {{0.2f, 0.2f, 0.2f}, 1.70f}},  // Dark gray
+    {"N",  {{0.0f, 0.0f, 1.0f}, 1.55f}},  // Blue
+    {"O",  {{1.0f, 0.0f, 0.0f}, 1.52f}},  // Red
+    {"S",  {{1.0f, 1.0f, 0.0f}, 1.80f}},  // Yellow
+    {"Se", {{1.0f, 0.6f, 0.0f}, 1.90f}},  // Orange
+    {"P",  {{1.0f, 0.5f, 0.0f}, 1.80f}},  // Orange
+    {"Cl", {{0.0f, 1.0f, 0.0f}, 1.75f}},  // Green
+    {"Na", {{0.5f, 0.5f, 1.0f}, 2.27f}},  // Light blue
+    {"K",  {{0.5f, 0.0f, 1.0f}, 2.75f}},  // Purple
+    {"Ca", {{0.5f, 0.5f, 0.0f}, 2.31f}},  // Dark yellow
+    {"Mg", {{0.0f, 1.0f, 0.0f}, 1.73f}},  // Green
+    {"Fe", {{0.8f, 0.4f, 0.0f}, 1.94f}},  // Brown/Orange
+    {"Cu", {{1.0f, 0.5f, 0.5f}, 1.96f}},  // Pink
+    {"Zn", {{0.5f, 0.5f, 0.5f}, 2.01f}},  // Gray
+    {"Co", {{0.0f, 0.0f, 0.5f}, 1.92f}},  // Dark blue
+    {"I",  {{0.58f, 0.0f, 0.58f}, 1.98f}} // Purple
     };;
 
 public slots:

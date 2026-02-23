@@ -5,10 +5,11 @@ Object_instance::Object_instance(Object *object)
     initializeOpenGLFunctions();
 
     m_object = object;
+    glGenVertexArrays(1,&VAO);
     glGenBuffers(1,&modelsVBO);
     glGenBuffers(1,&colorsVBO);
 
-    glBindVertexArray(object->mesh->renderer->VAO);
+    glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER,modelsVBO);
 
     std::size_t vec4size = sizeof(glm::vec4);
