@@ -73,7 +73,7 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         auto model = glm::mat4(1.0f);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(it->second.vdw_radius));
-        vdw_radius->add_instance(model,color,0.5f);
+        vdw_radius->add_instance(model,color,0.8f);
 
         avg_pos += atom.m_position;
 
@@ -84,6 +84,7 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
+
     vdw_radius->updateGPU();
     cores->updateGPU();
 }
@@ -114,10 +115,25 @@ void Molecule_visualization_widget::paintGL()
     object_manager.get("atom")->material->m_shader->set_mat4("projection",projection);
     //render
 
+    // 1. Draw opaque cores normally
+    glDepthMask(GL_TRUE); // enable depth write
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND); // opaque objects don't need blending
     glBindVertexArray(cores->VAO);
-    glDrawElementsInstanced(GL_TRIANGLES,object_manager.get("atom")->mesh->indices.count(),GL_UNSIGNED_INT,0,cores->instance_count());
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            object_manager.get("atom")->mesh->indices.count(),
+                            GL_UNSIGNED_INT, 0, cores->instance_count());
+
+    // 2. Draw transparent vdW spheres
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDepthMask(GL_FALSE); // disable depth write, keep depth test
     glBindVertexArray(vdw_radius->VAO);
-    glDrawElementsInstanced(GL_TRIANGLES,object_manager.get("atom")->mesh->indices.count(),GL_UNSIGNED_INT,0,vdw_radius->instance_count());
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            object_manager.get("atom")->mesh->indices.count(),
+                            GL_UNSIGNED_INT, 0, vdw_radius->instance_count());
+    glDepthMask(GL_TRUE); // restore depth write
 }
 
 

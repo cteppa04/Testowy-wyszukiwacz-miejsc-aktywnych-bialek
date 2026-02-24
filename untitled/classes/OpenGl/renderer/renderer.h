@@ -9,7 +9,7 @@ class Renderer : private QOpenGLFunctions_3_3_Core
 public:
     Renderer(QVector<float>* verticies,QVector<uint>* indices);
     ~Renderer();
-    GLuint VAO,VBO,EBO;
+    GLuint VBO,EBO;
 };
 
 #endif // RENDERER_H
