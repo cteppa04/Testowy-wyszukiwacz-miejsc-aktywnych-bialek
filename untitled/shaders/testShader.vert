@@ -5,10 +5,11 @@
     layout (location = 5) in vec4 aColor;
     uniform mat4 view;
     uniform mat4 projection;
+    uniform float scale;
 
     out vec4 vertexColor; // specify a color output to the fragment shader
 
     void main(){
-        gl_Position = projection * view * aModel * vec4(aPos, 1.0);
+        gl_Position = projection * view * aModel * vec4(aPos * scale, 1.0);
         vertexColor = aColor;
     }

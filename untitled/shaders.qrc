@@ -2,5 +2,7 @@
     <qresource prefix="/resources">
         <file>shaders/testShader.vert</file>
         <file>shaders/testShader2.fsh</file>
+        <file>shaders/outline_shader.fsh</file>
+        <file>shaders/OIT.fsh</file>
     </qresource>
 </RCC>

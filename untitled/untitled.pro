@@ -495,6 +495,8 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 DISTFILES += \
     includes/glm/CMakeLists.txt \
+    shaders/OIT.fsh \
+    shaders/outline_shader.fsh \
     shaders/testShader.vert \
     shaders/testShader2.fsh
 

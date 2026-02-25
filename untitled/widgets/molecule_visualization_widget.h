@@ -39,6 +39,7 @@ protected:
     Resource_manager<Object> object_manager;
     Object_instance *cores;
     Object_instance *vdw_radius;
+    GLuint fbo;
 
     //initialise atom colors
     void keyPressEvent(QKeyEvent *event) override;

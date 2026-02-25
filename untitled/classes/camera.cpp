@@ -126,9 +126,6 @@
     glm::mat4 Camera::create_view_matrix()
     {
         glm::mat4 view(1.0f);
-        qDebug() << "Camera pos x : " << m_camera_position.x;
-        qDebug() << "Camera pos y : " << m_camera_position.y;
-        qDebug() << "Camera pos z : " << m_camera_position.z;
         view = glm::lookAt(m_camera_position,m_camera_position + m_camera_forward,M_WORLD_Y_AXIS);
         return view;
     }

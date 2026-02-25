@@ -35,7 +35,7 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
 
     //handle camera
     camera.setType(CAMERA_H::Camera::Type::Free);
-    camera.set_camera_position(glm::vec3(0.0,0.0,10.0));
+    camera.set_camera_position(glm::vec3(0.0f, 0.0f, -10.0f));
     camera.start();
     camera.set_camera_orbit_point(orbit_camera_orbit_point);
 
@@ -52,7 +52,7 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
 
     for(int i = 0;i < protein->m_atom_list.count();++i){
         auto atom = protein->m_atom_list[i];
-        qDebug() << atom.m_element.toStdString();
+
         //normalize atom color to read map properly
         std::string key = atom.m_element.toStdString();
         key.erase(0, key.find_first_not_of(" \t\n\r"));
@@ -66,14 +66,12 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         }
 
         auto it = elements_data.find(key);
-        glm::vec3 color = {1.0f, 0.0f, 1.0f}; // fallback magenta
-        float radius = 1.5f;
 
-        color = it->second.color;
+        glm::vec3 color = it->second.color;
         auto model = glm::mat4(1.0f);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(it->second.vdw_radius));
-        vdw_radius->add_instance(model,color,0.8f);
+        vdw_radius->add_instance(model,color,1.0f);
 
         avg_pos += atom.m_position;
 
@@ -100,40 +98,58 @@ void Molecule_visualization_widget::paintGL()
 {
     view = camera.update(&keys);
 
-    //clear colors in bg and enable depth testing
     glEnable(GL_DEPTH_TEST); // enable depth testing
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // clear both color and depth
-
-    //use program
-    glUseProgram(object_manager.get("atom")->material->m_shader->shader_ID);
-
-    //send matrices to shader program
-    object_manager.get("atom")->material->m_shader->set_mat4("view",view);
-    object_manager.get("atom")->material->m_shader->set_mat4("projection",projection);
-    //render
-
-    // 1. Draw opaque cores normally
-    glDepthMask(GL_TRUE); // enable depth write
+    glEnable(GL_STENCIL_TEST);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND); // opaque objects don't need blending
+
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    //draw cores
+    //use program
+    glUseProgram(cores->m_object->material->m_shader->shader_ID);
+    //send matrices to shader program
+    cores->m_object->material->m_shader->set_float("scale",1.0f);
+    cores->m_object->material->m_shader->set_mat4("view",view);
+    cores->m_object->material->m_shader->set_mat4("projection",projection);
+    //render
     glBindVertexArray(cores->VAO);
     glDrawElementsInstanced(GL_TRIANGLES,
                             object_manager.get("atom")->mesh->indices.count(),
                             GL_UNSIGNED_INT, 0, cores->instance_count());
 
-    // 2. Draw transparent vdW spheres
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    //set stencil for first pass
+    glStencilMask(0xFF);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilOp(GL_KEEP,GL_KEEP,GL_REPLACE);
+    glStencilFunc(GL_ALWAYS,1,0xFF);
 
-    glDepthMask(GL_FALSE); // disable depth write, keep depth test
+    //draw vdw_radii
+    //use program
+    glUseProgram(vdw_radius->m_object->material->m_shader->shader_ID);
+    //send matrices to shader program
+    vdw_radius->m_object->material->m_shader->set_mat4("view",view);
+    vdw_radius->m_object->material->m_shader->set_mat4("projection",projection);
+    //render
     glBindVertexArray(vdw_radius->VAO);
     glDrawElementsInstanced(GL_TRIANGLES,
                             object_manager.get("atom")->mesh->indices.count(),
                             GL_UNSIGNED_INT, 0, vdw_radius->instance_count());
-    glDepthMask(GL_TRUE); // restore depth write
+
+    glStencilFunc(GL_NOTEQUAL,1,0xFF);
+    glStencilMask(0x00);
+    glDisable(GL_DEPTH_TEST);
+
+    glUseProgram(shader_manager.get("outline")->shader_ID);
+    shader_manager.get("outline")->set_float("scale",1.2f);
+    shader_manager.get("outline")->set_mat4("view",view);
+    shader_manager.get("outline")->set_mat4("projection",projection);
+    //render
+    glBindVertexArray(vdw_radius->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            object_manager.get("atom")->mesh->indices.count(),
+                            GL_UNSIGNED_INT, 0, cores->instance_count());
 }
 
 
@@ -163,10 +179,51 @@ void Molecule_visualization_widget::initializeGL()
     material_manager.add("smooth",Material_factory::material(shader_manager.get("basic")));
 
     object_manager.add("atom",Object_factory::sphere(mesh_manager.get("atom_sphere"),
-                                              material_manager.get("smooth")));
+                                                      material_manager.get("smooth")));
     //setup atoms
     cores = new Object_instance(object_manager.get("atom"));
     vdw_radius = new Object_instance(object_manager.get("atom"));
+
+    shader_manager.add("outline",new Shader_object(":/resources/shaders/testShader.vert",
+                                                    ":/resources/shaders/outline_shader.fsh"));
+
+    shader_manager.add("OIT",new Shader_object(":/resources/shaders/testShader.vert",
+                                                ":/resources/shaders/OIT.fsh"));
+
+    cores->add_instance(glm::mat4(1.0f),glm::vec3(1.0,0.0,0.0),1.0f);
+    cores->updateGPU();
+
+    //create framebuffer for opaque objects;
+    QSize screenSize = this->size();
+
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Texture for accumulated color
+    GLuint accumColorTex;
+    glGenTextures(1, &accumColorTex);
+    glBindTexture(GL_TEXTURE_2D, accumColorTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, screenSize.width(), screenSize.height(), 0, GL_RGBA, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, accumColorTex, 0);
+
+    // Texture for accumulated reveal
+    GLuint accumRevealTex;
+    glGenTextures(1, &accumRevealTex);
+    glBindTexture(GL_TEXTURE_2D, accumRevealTex);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_R16F, screenSize.width(), screenSize.height(), 0, GL_RED, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, accumRevealTex, 0);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,accumColorTex,0);
+    glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT1,GL_TEXTURE_2D,accumRevealTex,0);
+
+    GLenum attachements[2] = {GL_COLOR_ATTACHMENT0,GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2,attachements);
+
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
 }
 
 //keyboard key handling
