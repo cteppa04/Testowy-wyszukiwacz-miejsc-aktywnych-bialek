@@ -4,5 +4,8 @@
         <file>shaders/testShader2.fsh</file>
         <file>shaders/outline_shader.fsh</file>
         <file>shaders/OIT.fsh</file>
+        <file>shaders/fullScreen.vert</file>
+        <file>shaders/textureOutput.fsh</file>
+        <file>shaders/OITCompositePass.frag</file>
     </qresource>
 </RCC>

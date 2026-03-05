@@ -3,6 +3,7 @@
     //location 1,2,3,4
     layout (location = 1) in mat4 aModel;
     layout (location = 5) in vec4 aColor;
+
     uniform mat4 view;
     uniform mat4 projection;
     uniform float scale;

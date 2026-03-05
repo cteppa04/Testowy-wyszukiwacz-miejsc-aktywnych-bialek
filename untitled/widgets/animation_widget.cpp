@@ -7,7 +7,7 @@ Animation_widget::Animation_widget(QWidget *parent):
     auto *main_layout = new QVBoxLayout(this);
     main_layout->setContentsMargins(5,5,5,5);
 
-    m_animation_step_label = new QLabel("nigggggggggggggggggggggggggggggger",this);
+    m_animation_step_label = new QLabel("no protein selected",this);
 
     m_visualizator = new Molecule_visualization_widget(this);
 

@@ -77,6 +77,14 @@ public slots:
 
 private:
 
+    void draw_cores();
+    void draw_radii_empty_pass();
+    void draw_radii_outline();
+    void draw_transparent_radii();
+
+    GLuint screenVAO;
+    GLuint accumColorTex;
+    GLuint accumRevealTex;
 };
 
 #endif // MOLECULE_VISUALIZATION_WIDGET_H

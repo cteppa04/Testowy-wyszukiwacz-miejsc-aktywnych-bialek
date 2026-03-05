@@ -36,7 +36,8 @@ Shader_object::Shader_object(QString vertex_shader_source, QString fragment_shad
     glGetShaderiv(vertex_shader,GL_COMPILE_STATUS,&succes);
     if(!succes){
         glGetShaderInfoLog(vertex_shader,512,NULL,error_info);
-        qDebug() << "error nig: " << error_info;
+        qDebug() << "error vertex: " << error_info;
+        qDebug() << vertex_shader_source;
     }
 
     //same with fragment shader
@@ -57,7 +58,8 @@ Shader_object::Shader_object(QString vertex_shader_source, QString fragment_shad
     glGetShaderiv(fragment_shader,GL_COMPILE_STATUS,&succes);
     if(!succes){
         glGetShaderInfoLog(fragment_shader,512,NULL,error_info);
-        qDebug() << "error nigger: " << error_info;
+        qDebug() << "error fragment: " << error_info;
+        qDebug() << fragment_shader_source;
     }
 
     //create shader program
