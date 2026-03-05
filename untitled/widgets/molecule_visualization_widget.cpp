@@ -72,20 +72,22 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         auto model = glm::mat4(1.0f);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(it->second.vdw_radius));
-        vdw_radius->add_instance(model,color,0.2f);
+        vdw_radius->add_instance(model,color,0.15f);
 
         avg_pos += atom.m_position;
 
         model = glm::mat4(1.0);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(0.2f));
-        cores->add_instance(model,glm::vec3(0.6,0.6,0.6),1.0f);
+        cores->add_instance(model,color,1.0f);
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
 
     vdw_radius->updateGPU();
     cores->updateGPU();
+
+    camera.set_camera_direction(avg_pos);
 }
 
 void Molecule_visualization_widget::delete_protein()
@@ -260,6 +262,7 @@ void Molecule_visualization_widget::initializeGL()
     //setup atoms
     cores = new Object_instance(object_manager.get("atom"));
     vdw_radius = new Object_instance(object_manager.get("atom"));
+    probe_radius = new Object_instance(object_manager.get("atom"));
 
     shader_manager.add("outline",new Shader_object(":/resources/shaders/testShader.vert",
                                                     ":/resources/shaders/outline_shader.fsh"));

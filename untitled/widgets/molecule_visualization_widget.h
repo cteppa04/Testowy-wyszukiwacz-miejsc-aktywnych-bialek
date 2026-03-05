@@ -39,6 +39,10 @@ protected:
     Resource_manager<Object> object_manager;
     Object_instance *cores;
     Object_instance *vdw_radius;
+    Object_instance *probe_radius;
+    Object_instance *lines;
+    Object_instance *active_sites;
+
     GLuint fbo;
 
     //initialise atom colors

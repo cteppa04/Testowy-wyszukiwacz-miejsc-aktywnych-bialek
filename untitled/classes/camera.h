@@ -26,6 +26,7 @@ public:
 private:
     Type m_type{Type::Orbit};
 
+    bool update_needed(QSet<int> *keys);
     glm::mat4 create_view_matrix();
 
     //basic camera settings
