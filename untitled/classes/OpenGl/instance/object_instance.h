@@ -13,7 +13,7 @@ public:
     Object *m_object = nullptr;
 
     int instance_count();
-    void add_instance(glm::mat4 model, glm::vec3 color, float opacity);
+    void add_instance(glm::vec3 offset, float scale, glm::vec3 color, float opacity);
     void delete_instance(uint index);
     void clear();
 
@@ -21,11 +21,13 @@ public:
 
     GLuint VAO;
 private:
-    QVector<glm::mat4> m_models;
+    QVector<glm::vec3> m_offsets;
+    QVector<float> m_scales;
     QVector<glm::vec4> m_colors;
 
-    GLuint modelsVBO;
-    GLuint colorsVBO;
+    GLuint VBO_offsets;
+    GLuint VBO_scales;
+    GLuint VBO_colors;
 };
 
 #endif // OBJECT_INSTANCE_H

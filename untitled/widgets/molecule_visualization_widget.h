@@ -63,7 +63,7 @@ protected:
     {"H",  {{1.0f, 1.0f, 1.0f}, 1.20f}},  // White
     {"C",  {{0.2f, 0.2f, 0.2f}, 1.70f}},  // Dark gray
     {"N",  {{0.0f, 0.0f, 1.0f}, 1.55f}},  // Blue
-    {"O",  {{1.0f, 0.0f, 0.0f}, 1.52f}},  // Red
+    {"O",  {{1.0f, 0.0f, 0.0f}, 1.52f}},  // Red 1.52
     {"S",  {{1.0f, 1.0f, 0.0f}, 1.80f}},  // Yellow
     {"Se", {{1.0f, 0.6f, 0.0f}, 1.90f}},  // Orange
     {"P",  {{1.0f, 0.5f, 0.0f}, 1.80f}},  // Orange
@@ -77,8 +77,7 @@ protected:
     {"Zn", {{0.5f, 0.5f, 0.5f}, 2.01f}},  // Gray
     {"Co", {{0.0f, 0.0f, 0.5f}, 1.92f}},  // Dark blue
     {"I",  {{0.58f, 0.0f, 0.58f}, 1.98f}} // Purple
-    };;
-
+    };
 public slots:
 
 private:

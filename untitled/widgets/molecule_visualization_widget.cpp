@@ -72,14 +72,12 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         auto model = glm::mat4(1.0f);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(it->second.vdw_radius));
-        vdw_radius->add_instance(model,color,0.15f);
+        vdw_radius->add_instance(atom.m_position,it->second.vdw_radius,color,0.15f);
 
         avg_pos += atom.m_position;
 
-        model = glm::mat4(1.0);
-        model = glm::translate(model,atom.m_position);
-        model = glm::scale(model,glm::vec3(0.2f));
-        cores->add_instance(model,color,1.0); //colored cores
+        float scale = 0.2f;
+        cores->add_instance(atom.m_position,scale,color,1.0); //colored cores
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
@@ -321,7 +319,6 @@ void Molecule_visualization_widget::paintGL()
     // draw_transparent_radii();
 }
 
-
 void Molecule_visualization_widget::resizeGL(int w, int h)
 {
     glViewport(0,0,w,h);
@@ -367,14 +364,10 @@ void Molecule_visualization_widget::initializeGL()
                                                              ":/resources/shaders/OITCompositePass.frag"));
 
     //test spheres
-    auto model = glm::mat4(1.0f);
-    model = glm::scale(model,glm::vec3(1.25f));
-    cores->add_instance(model,glm::vec3(1.0,0.0,0.0),1.0f);
+    cores->add_instance(glm::vec3(0),1.25f,glm::vec3(1.0,0.0,0.0),1.0f);
     cores->updateGPU();
 
-    model = glm::mat4(1.0f);
-    model = glm::scale(model,glm::vec3(1.2f));
-    vdw_radius->add_instance(model,glm::vec3(1.0,0,0),0.25f);
+    vdw_radius->add_instance(glm::vec3(0),1.2,glm::vec3(1.0,0,0),0.25f);
     vdw_radius->updateGPU();
 
     //create framebuffer for opaque objects;
