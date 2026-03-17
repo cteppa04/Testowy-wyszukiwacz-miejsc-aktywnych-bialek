@@ -3,10 +3,7 @@
 #include "./ui_mainwindow.h"
 #include <QFileDialog>
 #include <QMessageBox>
-#include "classes/atom.h"
-#include "classes/parse_file.h"
 #include "qboxlayout.h"
-#include "qpushbutton.h"
 #include <widgets/protein_list.h>
 
 MainWindow::MainWindow(QWidget *parent)

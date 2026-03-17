@@ -26,6 +26,8 @@ public:
     //interface
     void add_protein(Protein *protein);
     void delete_protein();
+
+    void set_animation_step(int step);
 protected:
     //functions that must be overriden from QOpenGLWidget
     void initializeGL() override;
@@ -80,11 +82,14 @@ protected:
 public slots:
 
 private:
+    int current_animation_step;
+    QElapsedTimer animation_timer;
 
     void draw_cores();
-    void draw_radii_empty_pass();
+    void draw_vdw_radii();
     void draw_radii_outline();
     void draw_transparent_radii();
+    void draw_probe_radius();
 
     GLuint screenVAO;
     GLuint accumColorTex;

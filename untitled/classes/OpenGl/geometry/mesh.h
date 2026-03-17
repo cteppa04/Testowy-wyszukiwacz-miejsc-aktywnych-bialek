@@ -12,6 +12,7 @@ public:
     ~Mesh();
     QVector<float> verticies;
     QVector<uint> indices;
+    QVector<float> normals;
     Renderer* renderer;
 };
 

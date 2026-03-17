@@ -10,7 +10,7 @@ void main(void)
 {
     vec3 color = texture(textColor,uv).rgb;
 
-    float alpha = 1 - texture(textRevelage,uv).a;
+    float alpha = texture(textRevelage,uv).a;
 
     FragColor = vec4(color,alpha);
 }

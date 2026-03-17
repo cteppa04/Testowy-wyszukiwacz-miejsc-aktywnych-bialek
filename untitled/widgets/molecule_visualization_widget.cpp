@@ -79,7 +79,7 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         model = glm::mat4(1.0);
         model = glm::translate(model,atom.m_position);
         model = glm::scale(model,glm::vec3(0.2f));
-        cores->add_instance(model,color,1.0f);
+        cores->add_instance(model,color,1.0); //colored cores
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
@@ -96,9 +96,17 @@ void Molecule_visualization_widget::delete_protein()
     vdw_radius->clear();
 }
 
+void Molecule_visualization_widget::set_animation_step(int step)
+{
+    current_animation_step = step;
+    animation_timer.start();
+}
+
 void Molecule_visualization_widget::draw_cores(){
 
+    //set state
     glEnable(GL_DEPTH_TEST); // enable depth testing
+    glEnable(GL_CULL_FACE);
 
     //draw cores
     //use program
@@ -112,12 +120,40 @@ void Molecule_visualization_widget::draw_cores(){
     glDrawElementsInstanced(GL_TRIANGLES,
                             object_manager.get("atom")->mesh->indices.count(),
                             GL_UNSIGNED_INT, 0, cores->instance_count());
+
+    //restore state
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+}
+
+void Molecule_visualization_widget::draw_vdw_radii(){
+    //state start
+    glEnable(GL_DEPTH_TEST);
+
+    //set program
+    glUseProgram(vdw_radius->m_object->material->m_shader->shader_ID);
+
+    //send matrices to shader program
+    cores->m_object->material->m_shader->set_float("scale",1.0f);
+    cores->m_object->material->m_shader->set_mat4("view",view);
+    cores->m_object->material->m_shader->set_mat4("projection",projection);
+    cores->m_object->material->m_shader->set_bool("force_opaque",true);
+    //render
+    glBindVertexArray(vdw_radius->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            vdw_radius->m_object->mesh->indices.count(),
+                            GL_UNSIGNED_INT,
+                            0,
+                            vdw_radius->instance_count());
+
+    //state restore
     glDisable(GL_DEPTH_TEST);
 }
 
 void Molecule_visualization_widget::draw_radii_outline(){
     //enabl stencil test
     glEnable(GL_STENCIL_TEST);
+    glEnable(GL_CULL_FACE);
 
     //set stencil for first pass
     glStencilMask(0xFF);
@@ -159,6 +195,7 @@ void Molecule_visualization_widget::draw_radii_outline(){
 
     glStencilMask(0xFF);
     glDisable(GL_STENCIL_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 void Molecule_visualization_widget::draw_transparent_radii(){
@@ -213,22 +250,75 @@ void Molecule_visualization_widget::draw_transparent_radii(){
 
     glBlendFuncSeparate(GL_ONE,GL_ONE,GL_SRC_ALPHA,GL_DST_ALPHA);
     glDrawArrays(GL_TRIANGLES,0,3);
+    //state cleanup
     glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+
+    glDrawBuffer(GL_BACK);
+
+    glViewport(0,0,width(),height());
+}
+
+void Molecule_visualization_widget::draw_probe_radius(){
+    glEnable(GL_DEPTH_TEST); // enable depth testing
+
+    //draw probe
+    //use program
+    glUseProgram(cores->m_object->material->m_shader->shader_ID);
+    //send matrices to shader program
+    cores->m_object->material->m_shader->set_float("scale",1.0f);
+    cores->m_object->material->m_shader->set_mat4("view",view);
+    cores->m_object->material->m_shader->set_mat4("projection",projection);
+    //render
+    glBindVertexArray(cores->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            object_manager.get("atom")->mesh->indices.count(),
+                            GL_UNSIGNED_INT, 0, cores->instance_count());
+    glDisable(GL_DEPTH_TEST);
 }
 
 void Molecule_visualization_widget::paintGL()
 {
     view = camera.update(&keys);
 
-    glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+    glClearColor(0.0f, 0.5f, 0.5f, 1.0f);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    draw_cores();
+    switch(current_animation_step){
+    case 1:{
+        draw_cores();
+        break;
+    }
+    case 2:{
+        draw_cores();
+        draw_radii_outline();
+        draw_transparent_radii();
+        break;
+    }
+    case 3:{
+        draw_vdw_radii();
+        break;
+    }
+    case 4:{
+        draw_probe_radius();
+        break;
+    }
+    default:{
+        break;
+    }
+    }
 
-    draw_radii_outline();
+    // draw_cores();
 
-    draw_transparent_radii();
+    // draw_radii_outline();
+
+    // draw_transparent_radii();
 }
 
 
@@ -278,8 +368,8 @@ void Molecule_visualization_widget::initializeGL()
 
     //test spheres
     auto model = glm::mat4(1.0f);
-    model = glm::scale(model,glm::vec3(0.25f));
-    cores->add_instance(model,glm::vec3(0.0,0.0,0.0),1.0f);
+    model = glm::scale(model,glm::vec3(1.25f));
+    cores->add_instance(model,glm::vec3(1.0,0.0,0.0),1.0f);
     cores->updateGPU();
 
     model = glm::mat4(1.0f);

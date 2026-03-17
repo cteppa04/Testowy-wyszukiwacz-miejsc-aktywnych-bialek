@@ -4,6 +4,8 @@ layout (location = 1) out float accumReveal;
 
 in vec4 vertexColor;
 uniform float weight;
+uniform bool probe = false;
+uniform vec3 probe_color = vec3(1.0,0,0);
 
 void main()
 {
@@ -16,7 +18,11 @@ void main()
         accumReveal = 0.0;
     }else{
         //pisz normalnie
-        accumColor = vertexColor.rgb * alpha * weight;
+        if(probe){
+            accumColor = probe_color * alpha * weight;
+        }else{
+            accumColor = vertexColor.rgb * alpha * weight;
+        }
         accumReveal = alpha * weight;
     }
 

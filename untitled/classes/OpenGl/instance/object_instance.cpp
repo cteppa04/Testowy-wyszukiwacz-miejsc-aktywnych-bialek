@@ -11,32 +11,38 @@ Object_instance::Object_instance(Object *object)
 
     glBindVertexArray(VAO);
 
-    //bind mesh buffers
+    //bind mesh buffers and set attributes
+    //VBO
     glBindBuffer(GL_ARRAY_BUFFER,object->mesh->renderer->VBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,object->mesh->renderer->EBO);
-
-    //set attributes
+    //attributes
     glVertexAttribPointer(0,3,GL_FLOAT,GL_FALSE,3 * sizeof(float),(void*)0);
     glEnableVertexAttribArray(0);
 
-    //unbind buffers
+    //VBO_normals
+    glBindBuffer(GL_ARRAY_BUFFER,object->mesh->renderer->VBO_normals);
+    //attributes
+    glVertexAttribPointer(1,3,GL_FLOAT,GL_FALSE,3 * sizeof(float),(void*)0);
+    glEnableVertexAttribArray(1);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // optional
+    //EBO
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,object->mesh->renderer->EBO);
+
+    //models
     glBindBuffer(GL_ARRAY_BUFFER,modelsVBO);
 
     std::size_t vec4size = sizeof(glm::vec4);
 
     for(int i = 0;i < 4;i++){
         glEnableVertexAttribArray(1+i);
-        glVertexAttribPointer(1 + i,4,GL_FLOAT,GL_FALSE,sizeof(glm::mat4),(void*)(i * vec4size));
-        glVertexAttribDivisor(1 + i,1);
+        glVertexAttribPointer(2 + i,4,GL_FLOAT,GL_FALSE,sizeof(glm::mat4),(void*)(i * vec4size));
+        glVertexAttribDivisor(2 + i,1);
     }
 
     glBindBuffer(GL_ARRAY_BUFFER,colorsVBO);
 
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5,4,GL_FLOAT,GL_FALSE,vec4size,(void*)0);
-    glVertexAttribDivisor(5,1);
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6,4,GL_FLOAT,GL_FALSE,vec4size,(void*)0);
+    glVertexAttribDivisor(6,1);
 
     glBindVertexArray(0);
 }

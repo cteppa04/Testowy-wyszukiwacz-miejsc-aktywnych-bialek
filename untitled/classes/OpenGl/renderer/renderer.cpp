@@ -1,13 +1,14 @@
 #include "renderer.h"
 
 
-Renderer::Renderer(QVector<float> *verticies, QVector<uint> *indices)
+Renderer::Renderer(QVector<float> *verticies, QVector<uint> *indices, QVector<float>* normals)
 {
     initializeOpenGLFunctions();
 
     //generate buffers
     glGenBuffers(1,&VBO);
     glGenBuffers(1,&EBO);
+    glGenBuffers(1,&VBO_normals);
 
     //Bind and fill VBO
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
@@ -17,6 +18,9 @@ Renderer::Renderer(QVector<float> *verticies, QVector<uint> *indices)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER,indices->size() * sizeof(GLuint),indices->data(),GL_STATIC_DRAW);
 
+    //Bind and fill VBO_normlas
+    glBindBuffer(GL_ARRAY_BUFFER,VBO_normals);
+    glBufferData(GL_ARRAY_BUFFER,normals->size() * sizeof(float),normals->data(),GL_STATIC_DRAW);
     //unbind buffers
 
     glBindVertexArray(0);
@@ -33,5 +37,9 @@ Renderer::~Renderer()
     if (EBO) {
         glDeleteBuffers(1, &EBO);
         EBO = 0;
+    }
+    if (VBO_normals){
+        glDeleteBuffers(1,&VBO_normals);
+        VBO_normals = 0;
     }
 }

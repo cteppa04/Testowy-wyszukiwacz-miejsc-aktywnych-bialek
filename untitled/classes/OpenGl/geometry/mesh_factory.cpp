@@ -41,8 +41,8 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
     //top cap
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
         mesh->indices.append(top_vertex);
-        mesh->indices.append(current_slice + 1);
         mesh->indices.append((current_slice + 1) % slices + 1);
+        mesh->indices.append(current_slice + 1);
     }
     //middle
 
@@ -57,12 +57,12 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
             uint d = next_stack_start + (current_slice + 1) % slices;
 
             mesh->indices.append(a);
-            mesh->indices.append(c);
+            mesh->indices.append(b);
             mesh->indices.append(d);
 
             mesh->indices.append(a);
-            mesh->indices.append(b);
             mesh->indices.append(d);
+            mesh->indices.append(c);
 
         }
     }
@@ -74,8 +74,13 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
         mesh->indices.append(last_stack_start + (current_slice + 1) % slices);
         mesh->indices.append(bottom_vertex);
     }
+    for(int x = 0, y = 1;x < mesh->indices.size(); x += 3,y++){
+        qDebug() << y << " (" <<  mesh->indices[x] << mesh->indices[x+1]<< mesh->indices[x+2] << ")";
+    }
 
-    mesh->renderer = new Renderer(&mesh->verticies,&mesh->indices);
+    mesh->renderer = new Renderer(&mesh->verticies,&mesh->indices,&mesh->normals);
+
+    mesh->normals = mesh->verticies;
     return mesh;
 }
 
