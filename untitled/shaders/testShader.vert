@@ -10,7 +10,8 @@
     uniform float scale;
     uniform bool force_opaque = false;
     uniform bool probe = false;
-    uniform float probe_size;
+    uniform float probe_size = 1.4;
+    uniform vec3 probe_color;
 
     out vec4 vertexColor; // specify a color output to the fragment shader
     out vec3 vertexNormal;
@@ -29,6 +30,11 @@
         if(force_opaque){
             color = vec4(aColor.xyz,1.0);
         }
+
+        if(probe){
+            color = vec4(0.0,0.0,1.0,1.0);
+        }
+        //color
         vertexColor = color;
         vertexNormal = normalize(aNormal);
     }

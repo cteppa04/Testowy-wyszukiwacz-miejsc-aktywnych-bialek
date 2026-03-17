@@ -108,11 +108,13 @@ void Molecule_visualization_widget::draw_cores(){
 
     //draw cores
     //use program
-    glUseProgram(cores->m_object->material->m_shader->shader_ID);
+    auto shader = cores->m_object->material->m_shader;
+    glUseProgram(shader->shader_ID);
     //send matrices to shader program
-    cores->m_object->material->m_shader->set_float("scale",1.0f);
-    cores->m_object->material->m_shader->set_mat4("view",view);
-    cores->m_object->material->m_shader->set_mat4("projection",projection);
+    shader->set_float("scale",1.0f);
+    shader->set_mat4("view",view);
+    shader->set_mat4("projection",projection);
+    shader->set_bool("probe",false);
     //render
     glBindVertexArray(cores->VAO);
     glDrawElementsInstanced(GL_TRIANGLES,
@@ -129,13 +131,15 @@ void Molecule_visualization_widget::draw_vdw_radii(){
     glEnable(GL_DEPTH_TEST);
 
     //set program
-    glUseProgram(vdw_radius->m_object->material->m_shader->shader_ID);
+    auto shader = vdw_radius->m_object->material->m_shader;
+    glUseProgram(shader->shader_ID);
 
     //send matrices to shader program
-    cores->m_object->material->m_shader->set_float("scale",1.0f);
-    cores->m_object->material->m_shader->set_mat4("view",view);
-    cores->m_object->material->m_shader->set_mat4("projection",projection);
-    cores->m_object->material->m_shader->set_bool("force_opaque",true);
+    shader->set_float("scale",1.0f);
+    shader->set_mat4("view",view);
+    shader->set_mat4("projection",projection);
+    shader->set_bool("force_opaque",true);
+    shader->set_bool("probe",false);
     //render
     glBindVertexArray(vdw_radius->VAO);
     glDrawElementsInstanced(GL_TRIANGLES,
@@ -265,16 +269,19 @@ void Molecule_visualization_widget::draw_probe_radius(){
 
     //draw probe
     //use program
-    glUseProgram(cores->m_object->material->m_shader->shader_ID);
+    auto shader = vdw_radius->m_object->material->m_shader;
+    glUseProgram(shader->shader_ID);
     //send matrices to shader program
-    cores->m_object->material->m_shader->set_float("scale",1.0f);
-    cores->m_object->material->m_shader->set_mat4("view",view);
-    cores->m_object->material->m_shader->set_mat4("projection",projection);
+    shader->set_float("scale",1.0f);
+    shader->set_mat4("view",view);
+    shader->set_mat4("projection",projection);
+    shader->set_bool("probe",true);
+    shader->set_float("probe_size",1.4);
     //render
-    glBindVertexArray(cores->VAO);
+    glBindVertexArray(vdw_radius->VAO);
     glDrawElementsInstanced(GL_TRIANGLES,
                             object_manager.get("atom")->mesh->indices.count(),
-                            GL_UNSIGNED_INT, 0, cores->instance_count());
+                            GL_UNSIGNED_INT, 0, vdw_radius->instance_count());
     glDisable(GL_DEPTH_TEST);
 }
 
