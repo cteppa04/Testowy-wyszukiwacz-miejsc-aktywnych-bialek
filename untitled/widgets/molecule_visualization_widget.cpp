@@ -69,15 +69,12 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
         auto it = elements_data.find(key);
 
         glm::vec3 color = it->second.color;
-        auto model = glm::mat4(1.0f);
-        model = glm::translate(model,atom.m_position);
-        model = glm::scale(model,glm::vec3(it->second.vdw_radius));
-        vdw_radius->add_instance(atom.m_position,it->second.vdw_radius,color,0.15f);
+        vdw_radius->add_instance(atom.m_position,it->second.vdw_radius,glm::vec3(0),color,0.15f);
 
         avg_pos += atom.m_position;
 
         float scale = 0.2f;
-        cores->add_instance(atom.m_position,scale,color,1.0); //colored cores
+        cores->add_instance(atom.m_position,scale,glm::vec3(0),color,1.0); //colored cores
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
@@ -285,6 +282,33 @@ void Molecule_visualization_widget::draw_probe_radius(){
     glDisable(GL_DEPTH_TEST);
 }
 
+void Molecule_visualization_widget::draw_line()
+{
+    //set state
+    glEnable(GL_DEPTH_TEST); // enable depth testing
+    glEnable(GL_CULL_FACE);
+
+    //draw cores
+    //use program
+    auto shader = triangulation_lines->m_object->material->m_shader;
+    glUseProgram(shader->shader_ID);
+    //send matrices to shader program
+    shader->set_float("scale",1.0f);
+    shader->set_mat4("view",view);
+    shader->set_mat4("projection",projection);
+    shader->set_bool("probe",false);
+    //render
+    glBindVertexArray(triangulation_lines->VAO);
+    glDrawElementsInstanced(GL_TRIANGLES,
+                            triangulation_lines->m_object->mesh->indices.count(),
+                            GL_UNSIGNED_INT, 0, triangulation_lines->instance_count());
+
+    //restore state
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+}
+
+
 void Molecule_visualization_widget::paintGL()
 {
     view = camera.update(&keys);
@@ -297,7 +321,8 @@ void Molecule_visualization_widget::paintGL()
 
     switch(current_animation_step){
     case 1:{
-        draw_cores();
+        draw_line();
+        //draw_cores();
         break;
     }
     case 2:{
@@ -345,18 +370,23 @@ void Molecule_visualization_widget::initializeGL()
 
     //create atom object
     mesh_manager.add("atom_sphere",Mesh_factory::Sphere_mesh(16,16));
-
     shader_manager.add("basic",new Shader_object(":/resources/shaders/testShader.vert",
                                                   ":/resources/shaders/testShader2.fsh"));
 
     material_manager.add("smooth",Material_factory::material(shader_manager.get("basic")));
 
-    object_manager.add("atom",Object_factory::sphere(mesh_manager.get("atom_sphere"),
+    object_manager.add("atom",Object_factory::Basic(mesh_manager.get("atom_sphere"),
                                                       material_manager.get("smooth")));
+    //add line
+    mesh_manager.add("triangulation_line",Mesh_factory::Line_mesh(3));
+
+    object_manager.add("triangulation_line",Object_factory::Basic(mesh_manager.get("triangulation_line"),
+                                                                   material_manager.get("smooth")));
     //setup atoms
     cores = new Object_instance(object_manager.get("atom"));
     vdw_radius = new Object_instance(object_manager.get("atom"));
     probe_radius = new Object_instance(object_manager.get("atom"));
+    triangulation_lines = new Object_instance(object_manager.get("triangulation_line"));
 
     shader_manager.add("outline",new Shader_object(":/resources/shaders/testShader.vert",
                                                     ":/resources/shaders/outline_shader.fsh"));
@@ -371,12 +401,15 @@ void Molecule_visualization_widget::initializeGL()
                                                              ":/resources/shaders/OITCompositePass.frag"));
 
     //test spheres
-    cores->add_instance(glm::vec3(0),1.25f,glm::vec3(1.0,0.0,0.0),1.0f);
-    cores->updateGPU();
+    //cores->add_instance(glm::vec3(0),1.25,glm::vec3(0),glm::vec3(1.0,0.0,0.0),1.0);
+    //cores->updateGPU();
 
-    vdw_radius->add_instance(glm::vec3(0),1.2,glm::vec3(1.0,0,0),0.25f);
-    vdw_radius->updateGPU();
+    // vdw_radius->add_instance(glm::vec3(0),1.2,glm::vec3(0),glm::vec3(0.0,1.0,0.0),0.25);
+    // vdw_radius->updateGPU();
 
+    //test line
+    triangulation_lines->add_instance(glm::vec3(0),1.0,glm::vec3(0), glm::vec3(0.0,1.0,0.0),1.0);
+    triangulation_lines->updateGPU();
     //create framebuffer for opaque objects;
     QSize screenSize = this->size();
 

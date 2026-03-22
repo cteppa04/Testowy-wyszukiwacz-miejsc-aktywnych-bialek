@@ -42,7 +42,7 @@ protected:
     Object_instance *cores;
     Object_instance *vdw_radius;
     Object_instance *probe_radius;
-    Object_instance *lines;
+    Object_instance *triangulation_lines;
     Object_instance *active_sites;
 
     GLuint fbo;
@@ -84,11 +84,14 @@ private:
     int current_animation_step;
     QElapsedTimer animation_timer;
 
+    //draw molecule
     void draw_cores();
     void draw_vdw_radii();
     void draw_radii_outline();
     void draw_transparent_radii();
     void draw_probe_radius();
+    //draw triangulation
+    void draw_line();
 
     GLuint screenVAO;
     GLuint accumColorTex;

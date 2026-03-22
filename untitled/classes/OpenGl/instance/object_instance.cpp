@@ -9,6 +9,7 @@ Object_instance::Object_instance(Object *object)
     glGenBuffers(1,&VBO_offsets);
     glGenBuffers(1,&VBO_scales);
     glGenBuffers(1,&VBO_colors);
+    glGenBuffers(1,&VBO_rotations);
 
     glBindVertexArray(VAO);
 
@@ -48,14 +49,22 @@ Object_instance::Object_instance(Object *object)
     glBindBuffer(GL_ARRAY_BUFFER,VBO_scales);
     //attributes
     glEnableVertexAttribArray(4);
-    glVertexAttribPointer(4,1,GL_FLOAT,GL_FALSE,sizeof(float),(void*)0);
+    glVertexAttribPointer(4,3,GL_FLOAT,GL_FALSE,sizeof(glm::vec3),(void*)0);
     glVertexAttribDivisor(4,1);
+
+    //VBO_rotations
+    glBindBuffer(GL_ARRAY_BUFFER,VBO_rotations);
+    //attributes
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5,3,GL_FLOAT,GL_FALSE,sizeof(glm::vec3),(void*)0);
+    glVertexAttribDivisor(5,1);
 
     // 0 - verticies
     // 1 - normals
     // 2 - colors
     // 3 - offset
     // 4 - scale
+    // 5 - rotatio
     glBindVertexArray(0);
 }
 
@@ -64,11 +73,12 @@ int Object_instance::instance_count()
     return m_colors.size();
 }
 
-void Object_instance::add_instance(glm::vec3 offset, float scale, glm::vec3 color, float opacity)
+void Object_instance::add_instance(glm::vec3 offset, glm::vec3 scale,glm::vec3 rotation, glm::vec3 color, float opacity)
 {
     m_offsets.append(offset);
     m_scales.append(scale);
     m_colors.append(glm::vec4(color,opacity));
+    m_rotations.append(rotation);
 }
 
 void Object_instance::delete_instance(uint index)
@@ -79,6 +89,7 @@ void Object_instance::delete_instance(uint index)
     m_offsets.erase(m_offsets.begin() + index);
     m_scales.erase(m_scales.begin() + index);
     m_colors.erase(m_colors.begin() + index);
+    m_rotations.erase(m_rotations.begin() + index);
 }
 
 void Object_instance::clear()
@@ -86,6 +97,7 @@ void Object_instance::clear()
     m_offsets.clear();
     m_scales.clear();
     m_colors.clear();
+    m_rotations.clear();
     updateGPU();
 }
 
@@ -100,8 +112,10 @@ void Object_instance::updateGPU()
     glBufferData(GL_ARRAY_BUFFER,m_offsets.size() * sizeof(glm::vec3),m_offsets.data(),GL_STATIC_DRAW);
     //scales
     glBindBuffer(GL_ARRAY_BUFFER,VBO_scales);
-    glBufferData(GL_ARRAY_BUFFER,m_scales.size() * sizeof(float),m_scales.data(),GL_STATIC_DRAW);
-
+    glBufferData(GL_ARRAY_BUFFER,m_scales.size() * sizeof(glm::vec3),m_scales.data(),GL_STATIC_DRAW);
+    //rotations
+    glBindBuffer(GL_ARRAY_BUFFER,VBO_rotations);
+    glBufferData(GL_ARRAY_BUFFER,m_rotations.size() * sizeof(glm::vec3),m_rotations.data(),GL_STATIC_DRAW);
     //end
     glBindBuffer(GL_ARRAY_BUFFER,0);
 

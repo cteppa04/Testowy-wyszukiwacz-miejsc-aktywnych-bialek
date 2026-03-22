@@ -81,3 +81,71 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
     return mesh;
 }
 
+
+Mesh *Mesh_factory::Line_mesh(uint angle_count)
+{
+    //line directed in z positive axis
+
+    Mesh *mesh = new Mesh();
+    //veritcies
+    auto delta_pitch = glm::radians(360.0/angle_count);
+    float current_pitch = 0;
+
+    //center point for base filling
+    mesh->verticies.append(0);
+    mesh->verticies.append(0);
+    mesh->verticies.append(0);
+    //base points
+    for(uint i = 0; i < angle_count; i++){
+
+        auto position = euler_to_cartesian(current_pitch,0,1);
+        mesh->verticies.append(position.x);
+        mesh->verticies.append(position.y);
+        mesh->verticies.append(position.z);
+
+        current_pitch += delta_pitch;
+    }
+
+    //ending points
+    int vertex_count = mesh->verticies.size() / 3;
+    for(int i = 0; i < vertex_count; i ++){
+        mesh->verticies.append(mesh->verticies[i*3] + 1.0); //x
+        mesh->verticies.append(mesh->verticies[i*3 + 1]); //y
+        mesh->verticies.append(mesh->verticies[i*3 + 2]); //z
+    }
+
+    //indices
+    //first cap
+    for(uint i = 0; i < angle_count; i++){
+        mesh->indices.append(0);
+        mesh->indices.append(i + 1);
+        mesh->indices.append((i + 1) % angle_count + 1);
+    }
+
+    //walls
+    for(uint i = 1;i <= angle_count;i++){ //for each vertex starting at 1 to n skipping central vertex
+        uint a = i;
+        uint d = (i % angle_count) + 1;
+        uint b = a + angle_count + 1;
+        uint c = d + angle_count + 1;
+
+        // first triangle
+        mesh->indices.append(a);
+        mesh->indices.append(b);
+        mesh->indices.append(c);
+
+        // second triangle
+        mesh->indices.append(a);
+        mesh->indices.append(c);
+        mesh->indices.append(d);
+    }
+    //ending cap
+
+    for(int i = 0; i <= mesh->verticies.size()/3;i++){
+        qDebug() << i + 1 << "("  << mesh->indices[i*3] << ", " << mesh->indices[i*3 + 1] << ", " << mesh->indices[i*3 + 2] << ")";
+    }
+    //normals
+    mesh->normals = mesh->verticies;
+    mesh->renderer = new Renderer(&mesh->verticies,&mesh->indices,&mesh->normals);
+    return mesh;
+}

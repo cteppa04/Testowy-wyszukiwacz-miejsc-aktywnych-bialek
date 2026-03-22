@@ -8,6 +8,7 @@
 namespace Mesh_factory
 {
     Mesh* Sphere_mesh(uint slices = 3,uint stacks = 1);
+    Mesh* Line_mesh(uint angle_count = 3);
 };
 
 #endif // MESH_FACTORY_H

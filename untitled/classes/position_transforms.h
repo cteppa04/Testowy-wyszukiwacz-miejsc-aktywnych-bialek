@@ -8,14 +8,15 @@
 //right x+
 //back z+
 //pitch rotates around x
-//yaw rotates around y
+//yaw rotates around y and starts looking at z
 //pitch 0 => y = 0
 //yaw 0 => z = 1, x = 0
 //give radians
+
 inline glm::vec3 euler_to_cartesian(float pitch, float yaw, float radius){
     glm::vec3 direction_rad;
-    direction_rad.x = std::sin(yaw) * cos(pitch);
-    direction_rad.z = std::cos(yaw) * cos(pitch);
+    direction_rad.x = std::sin(yaw) * std::cos(pitch);
+    direction_rad.z = std::cos(yaw) * std::cos(pitch);
     direction_rad.y = std::sin(pitch);
     glm::vec3 position = direction_rad * radius;
     return position;

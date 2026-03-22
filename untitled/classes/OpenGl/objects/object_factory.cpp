@@ -1,7 +1,7 @@
 #include "object_factory.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-Object *Object_factory::sphere(Mesh *mesh, Material *material)
+Object *Object_factory::Basic(Mesh *mesh, Material *material)
 {
     Object* object = new Object();
     //fill object variables

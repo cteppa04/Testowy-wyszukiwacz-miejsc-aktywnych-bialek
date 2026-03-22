@@ -9,7 +9,7 @@
 
 namespace Object_factory
 {
-    Object* sphere(Mesh* mesh,Material* material);
+    Object* Basic(Mesh* mesh,Material* material);
 };
 
 #endif // OBJECT_FACTORY_H
