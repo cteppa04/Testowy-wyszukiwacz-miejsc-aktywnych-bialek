@@ -55,16 +55,25 @@ Object_instance::Object_instance(Object *object)
     //VBO_rotations
     glBindBuffer(GL_ARRAY_BUFFER,VBO_rotations);
     //attributes
-    glEnableVertexAttribArray(5);
-    glVertexAttribPointer(5,3,GL_FLOAT,GL_FALSE,sizeof(glm::vec3),(void*)0);
-    glVertexAttribDivisor(5,1);
+    for (int i = 0; i < 4; i++) {
+        glEnableVertexAttribArray(5 + i); // 5,6,7,8
+        glVertexAttribPointer(
+            5 + i,                    // attribute location
+            4,                         // size: vec4
+            GL_FLOAT,
+            GL_FALSE,
+            sizeof(glm::mat4),          // stride
+            (void*)(sizeof(glm::vec4) * i) // offset of column
+            );
+        glVertexAttribDivisor(5 + i, 1);
+    }
 
     // 0 - verticies
     // 1 - normals
     // 2 - colors
     // 3 - offset
     // 4 - scale
-    // 5 - rotatio
+    // 5,6,7,8 - rotation
     glBindVertexArray(0);
 }
 
@@ -73,7 +82,7 @@ int Object_instance::instance_count()
     return m_colors.size();
 }
 
-void Object_instance::add_instance(glm::vec3 offset, glm::vec3 scale,glm::vec3 rotation, glm::vec3 color, float opacity)
+void Object_instance::add_instance(glm::vec3 offset, glm::vec3 scale,glm::mat4 rotation, glm::vec3 color, float opacity)
 {
     m_offsets.append(offset);
     m_scales.append(scale);
@@ -115,7 +124,7 @@ void Object_instance::updateGPU()
     glBufferData(GL_ARRAY_BUFFER,m_scales.size() * sizeof(glm::vec3),m_scales.data(),GL_STATIC_DRAW);
     //rotations
     glBindBuffer(GL_ARRAY_BUFFER,VBO_rotations);
-    glBufferData(GL_ARRAY_BUFFER,m_rotations.size() * sizeof(glm::vec3),m_rotations.data(),GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,m_rotations.size() * sizeof(glm::mat4),m_rotations.data(),GL_STATIC_DRAW);
     //end
     glBindBuffer(GL_ARRAY_BUFFER,0);
 

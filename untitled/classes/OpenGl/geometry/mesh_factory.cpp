@@ -41,8 +41,8 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
     //top cap
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
         mesh->indices.append(top_vertex);
-        mesh->indices.append((current_slice + 1) % slices + 1);
         mesh->indices.append(current_slice + 1);
+        mesh->indices.append((current_slice + 1) % slices + 1);
     }
     //middle
 
@@ -57,12 +57,12 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
             uint d = next_stack_start + (current_slice + 1) % slices;
 
             mesh->indices.append(a);
-            mesh->indices.append(b);
             mesh->indices.append(d);
+            mesh->indices.append(b);
 
             mesh->indices.append(a);
-            mesh->indices.append(d);
             mesh->indices.append(c);
+            mesh->indices.append(d);
 
         }
     }
@@ -71,8 +71,8 @@ Mesh* Mesh_factory::Sphere_mesh(uint slices, uint stacks)
     uint last_stack_start = bottom_vertex - slices;
     for (uint current_slice = 0; current_slice < slices; ++current_slice) {
         mesh->indices.append(last_stack_start + current_slice);
-        mesh->indices.append(last_stack_start + (current_slice + 1) % slices);
         mesh->indices.append(bottom_vertex);
+        mesh->indices.append(last_stack_start + (current_slice + 1) % slices);
     }
 
     mesh->normals = mesh->verticies;
@@ -139,12 +139,25 @@ Mesh *Mesh_factory::Line_mesh(uint angle_count)
         mesh->indices.append(c);
         mesh->indices.append(d);
     }
-    //ending cap
 
-    for(int i = 0; i <= mesh->verticies.size()/3;i++){
+    //ending cap
+    uint start_of_second_cap = angle_count + 1;
+    for(uint i = 1; i <= angle_count; i++){;
+        uint b = start_of_second_cap + i;
+        uint c = ((i) % angle_count) + 1 + start_of_second_cap;
+        mesh->indices.append(start_of_second_cap);
+        mesh->indices.append(c);
+        mesh->indices.append(b);
+    }
+
+    for(int i = 0; i < mesh->indices.size()/3;i++){
         qDebug() << i + 1 << "("  << mesh->indices[i*3] << ", " << mesh->indices[i*3 + 1] << ", " << mesh->indices[i*3 + 2] << ")";
     }
+
+
     //normals
+
+
     mesh->normals = mesh->verticies;
     mesh->renderer = new Renderer(&mesh->verticies,&mesh->indices,&mesh->normals);
     return mesh;

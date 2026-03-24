@@ -91,8 +91,8 @@ private:
     void draw_transparent_radii();
     void draw_probe_radius();
     //draw triangulation
-    void draw_line();
-
+    void add_line(glm::vec3 from, glm::vec3 to, float radius,glm::vec3 color);
+    void draw_triangulation_lines();
     GLuint screenVAO;
     GLuint accumColorTex;
     GLuint accumRevealTex;
