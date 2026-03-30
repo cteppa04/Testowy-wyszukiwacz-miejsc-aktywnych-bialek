@@ -26,7 +26,7 @@ public:
     //interface
     void add_protein(Protein *protein);
     void delete_protein();
-
+    Protein* current_protein;
     void set_animation_step(int step);
 protected:
     //functions that must be overriden from QOpenGLWidget
@@ -89,13 +89,35 @@ private:
     void draw_vdw_radii();
     void draw_radii_outline();
     void draw_transparent_radii();
+    //OIT textures
+    GLuint screenVAO;
+    GLuint accumColorTex;
+    GLuint accumRevealTex;
+
     void draw_probe_radius();
     //draw triangulation
     void add_line(glm::vec3 from, glm::vec3 to, float radius,glm::vec3 color);
     void draw_triangulation_lines();
-    GLuint screenVAO;
-    GLuint accumColorTex;
-    GLuint accumRevealTex;
+
+    //deluay triangulation
+    struct Tetra{
+        glm::vec3 a;
+        glm::vec3 b;
+        glm::vec3 c;
+        glm::vec3 d;
+
+        Tetra(const glm::vec3 a,const glm::vec3 b,const glm::vec3 c,const glm::vec3 d)
+            : a(a), b(b), c(c), d(d) {}
+    };
+    void create_deluay_triangulation();
+    Tetra create_super_tetra();
+    void points_in_sphere();
+    void get_faces();
+
+
+
+
+
 };
 
 #endif // MOLECULE_VISUALIZATION_WIDGET_H

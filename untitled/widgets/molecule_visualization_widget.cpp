@@ -4,6 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/common.hpp>
 
 #include <QElapsedTimer>
 #include <QTimer>
@@ -50,6 +51,7 @@ Molecule_visualization_widget::Molecule_visualization_widget(QWidget *parent)
 
 void Molecule_visualization_widget::add_protein(Protein *protein)
 {
+    current_protein = protein;
     glm::vec3 avg_pos(0.0);
 
     for(int i = 0;i < protein->m_atom_list.count();++i){
@@ -76,6 +78,7 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
 
         float scale = 0.2f;
         cores->add_instance(atom.m_position,glm::vec3(scale),glm::mat4(1),color,1.0); //colored cores
+
     }
     avg_pos /= protein->m_atom_list.count();
     camera.set_camera_direction(avg_pos);
@@ -84,12 +87,16 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
     cores->updateGPU();
 
     camera.set_camera_direction(avg_pos);
+
+    //calculate deluay triangulation
+    create_deluay_triangulation();
 }
 
 void Molecule_visualization_widget::delete_protein()
 {
     cores->clear();
     vdw_radius->clear();
+    triangulation_lines->clear();
 }
 
 void Molecule_visualization_widget::set_animation_step(int step)
@@ -292,20 +299,28 @@ void Molecule_visualization_widget::add_line(glm::vec3 from, glm::vec3 to, float
 {
     float distance = glm::distance(from,to);
     glm::vec3 scale = glm::vec3(distance,radius,radius);
-    //differences
     glm::vec3 dir = glm::normalize(to - from);
-
-    // your line is along +X → so:
     glm::vec3 base = glm::vec3(1,0,0);
 
-    // axis of rotation
-    glm::vec3 axis = glm::cross(base, dir);
-    // angle
-    float angle = acos(glm::dot(base, dir));
+    double dot_product = glm::dot(dir,base);
+    dot_product = glm::clamp(dot_product,-1.0,1.0);
 
-    // store as axis-angle
-    glm::mat4 rotation_matrix = glm::mat4(1.0);
-    rotation_matrix = glm::rotate(rotation_matrix,angle,axis);
+    glm::vec3 axis = glm::cross(base,dir);
+    glm::mat4 rotation_matrix(1.0);
+
+    if(glm::length(axis) < 0.0001){
+        //prostopadle
+        if(dot_product > 0.0){
+            //zgodne
+        }else{
+            //przeciwne
+            rotation_matrix = glm::rotate(rotation_matrix,glm::pi<float>(),glm::vec3(0,1,0));
+        }
+    }else{
+        axis = glm::normalize(axis);
+        float angle = acos(dot_product);
+        rotation_matrix = glm::rotate(rotation_matrix,angle,axis);
+    }
     triangulation_lines->add_instance(from,glm::vec3(distance,radius,radius),rotation_matrix,color,1.0);
     triangulation_lines->updateGPU();
 }
@@ -336,6 +351,70 @@ void Molecule_visualization_widget::draw_triangulation_lines()
     glDisable(GL_CULL_FACE);
 }
 
+void Molecule_visualization_widget::create_deluay_triangulation()
+{
+    create_super_tetra();
+}
+
+Molecule_visualization_widget::Tetra Molecule_visualization_widget::create_super_tetra()
+{
+    glm::vec3 centroid(0,0,0);
+    for(Atom atom: current_protein->m_atom_list){
+        centroid+=atom.m_position;
+    }
+    centroid /= float(current_protein->m_atom_list.size());
+
+    float radius = 0.0f;
+    for(Atom atom: current_protein->m_atom_list){
+        float distance = glm::distance(atom.m_position,centroid);
+        if(distance > radius){
+            radius = distance;
+        }
+    }
+    radius *= 1.2; // make sure no clipping occurs
+
+    float R_tetra = radius * sqrt(3);
+    glm::vec3 unit_tetra[4] = {
+       glm::vec3( 1,  1,  1),
+       glm::vec3(-1, -1,  1),
+       glm::vec3(-1,  1, -1),
+       glm::vec3( 1, -1, -1)
+    };
+
+    QVector<glm::vec3> tetra_verticies;
+    for(int i = 0; i < 4; ++i){
+        tetra_verticies.append(centroid + unit_tetra[i] * R_tetra);
+    }
+
+
+    cores->add_instance(centroid,glm::vec3(radius),glm::mat4(1.0),glm::vec3(1,1,1),1.0);
+    cores->add_instance(tetra_verticies[0],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(1,0,0),1.0);
+    cores->add_instance(tetra_verticies[1],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+    cores->add_instance(tetra_verticies[2],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,0,1),1.0);
+    cores->add_instance(tetra_verticies[3],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,1),1.0);
+    cores->updateGPU();
+
+    add_line(tetra_verticies[0],tetra_verticies[1],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[0],tetra_verticies[2],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[0],tetra_verticies[3],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[1],tetra_verticies[3],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[1],tetra_verticies[2],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[2],tetra_verticies[1],1.0,glm::vec3(0,1,0));
+    add_line(tetra_verticies[2],tetra_verticies[3],1.0,glm::vec3(0,1,0));
+    return Tetra(glm::vec3(0),glm::vec3(0),glm::vec3(0),glm::vec3(0));
+
+}
+
+void Molecule_visualization_widget::points_in_sphere()
+{
+
+}
+
+void Molecule_visualization_widget::get_faces()
+{
+
+}
+
 
 void Molecule_visualization_widget::paintGL()
 {
@@ -350,6 +429,9 @@ void Molecule_visualization_widget::paintGL()
     switch(current_animation_step){
     case 1:{
         draw_cores();
+        draw_triangulation_lines();
+
+        //draw_cores();
         break;
     }
     case 2:{
@@ -397,7 +479,7 @@ void Molecule_visualization_widget::initializeGL()
     initializeOpenGLFunctions();
 
     //create transformation matrces
-    projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,100.0f);
+    projection = glm::perspective(glm::radians(45.0f),800.0f/600.0f,0.1f,300.0f);
 
     //create atom object
     mesh_manager.add("atom_sphere",Mesh_factory::Sphere_mesh(16,16));
@@ -445,12 +527,18 @@ void Molecule_visualization_widget::initializeGL()
 
     //test line
     add_line(glm::vec3(0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(0,0,0),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(0.0,0.0,20.0),glm::vec3(0,0,10),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(0.0,0.0,0),glm::vec3(0,-10,0),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(0,0,10),glm::vec3(0,-10,0),0.5,glm::vec3(0.0,1.0,0.0));
-    add_line(glm::vec3(10,10,10),glm::vec3(0,0,0),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(-10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(0,-10,0),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(0,0,-10),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(0,10,0),0.5,glm::vec3(0.0,1.0,0.0));
+    add_line(glm::vec3(0),glm::vec3(0,0,10),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(0,0,0),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(0.0,0.0,20.0),glm::vec3(0,0,10),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(0.0,0.0,0),glm::vec3(0,-10,0),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(0,0,10),glm::vec3(0,-10,0),0.5,glm::vec3(0.0,1.0,0.0));
+    // add_line(glm::vec3(10,10,10),glm::vec3(0,0,0),0.5,glm::vec3(0.0,1.0,0.0));
 
     //create framebuffer for opaque objects;
     QSize screenSize = this->size();
