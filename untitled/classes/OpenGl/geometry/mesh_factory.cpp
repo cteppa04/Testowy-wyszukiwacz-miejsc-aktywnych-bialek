@@ -149,12 +149,6 @@ Mesh *Mesh_factory::Line_mesh(uint angle_count)
         mesh->indices.append(c);
         mesh->indices.append(b);
     }
-
-    for(int i = 0; i < mesh->indices.size()/3;i++){
-        qDebug() << i + 1 << "("  << mesh->indices[i*3] << ", " << mesh->indices[i*3 + 1] << ", " << mesh->indices[i*3 + 2] << ")";
-    }
-
-
     //normals
 
 

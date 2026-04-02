@@ -12,6 +12,7 @@
 #include <classes/OpenGl/shaders/shader_object.h>
 #include <classes/OpenGl/geometry/geometry_master.h>
 #include <classes/OpenGl/objects/object_master.h>
+#include <classes/tetra.h>
 
 #include <QObject>
 #include <QMessageBox>
@@ -99,24 +100,8 @@ private:
     void add_line(glm::vec3 from, glm::vec3 to, float radius,glm::vec3 color);
     void draw_triangulation_lines();
 
-    //deluay triangulation
-    struct Tetra{
-        glm::vec3 a;
-        glm::vec3 b;
-        glm::vec3 c;
-        glm::vec3 d;
-
-        Tetra(const glm::vec3 a,const glm::vec3 b,const glm::vec3 c,const glm::vec3 d)
-            : a(a), b(b), c(c), d(d) {}
-    };
     void create_deluay_triangulation();
-    Tetra create_super_tetra();
-    void points_in_sphere();
-    void get_faces();
-
-
-
-
+    QVector<glm::vec3> create_super_tetra();
 
 };
 

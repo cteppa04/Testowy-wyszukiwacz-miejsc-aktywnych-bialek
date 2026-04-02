@@ -22,6 +22,8 @@ SOURCES += \
     classes/camera.cpp \
     classes/parse_file.cpp \
     classes/protein.cpp \
+    classes/tetra.cpp \
+    classes/triangle_face.cpp \
     includes/glm/detail/glm.cpp \
     main.cpp \
     mainwindow.cpp \
@@ -49,6 +51,8 @@ HEADERS += \
     classes/parse_file.h \
     classes/position_transforms.h \
     classes/protein.h \
+    classes/tetra.h \
+    classes/triangle_face.h \
     includes/glm/common.hpp \
     includes/glm/detail/_fixes.hpp \
     includes/glm/detail/_noise.hpp \

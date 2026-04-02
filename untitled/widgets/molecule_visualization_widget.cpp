@@ -17,6 +17,9 @@
 #include <classes/OpenGl/objects/object.h>
 #include <classes/OpenGl/resource_manager.h>
 
+#include <classes/tetra.h>
+#include <classes/triangle_face.h>
+#include <unordered_map>
 
 glm::mat4 view(1.0f);
 glm::mat4 projection(1.0f);
@@ -84,6 +87,9 @@ void Molecule_visualization_widget::add_protein(Protein *protein)
     camera.set_camera_direction(avg_pos);
 
     vdw_radius->updateGPU();
+    cores->updateGPU();
+
+    cores->clear();
     cores->updateGPU();
 
     camera.set_camera_direction(avg_pos);
@@ -322,7 +328,6 @@ void Molecule_visualization_widget::add_line(glm::vec3 from, glm::vec3 to, float
         rotation_matrix = glm::rotate(rotation_matrix,angle,axis);
     }
     triangulation_lines->add_instance(from,glm::vec3(distance,radius,radius),rotation_matrix,color,1.0);
-    triangulation_lines->updateGPU();
 }
 
 void Molecule_visualization_widget::draw_triangulation_lines()
@@ -353,10 +358,71 @@ void Molecule_visualization_widget::draw_triangulation_lines()
 
 void Molecule_visualization_widget::create_deluay_triangulation()
 {
-    create_super_tetra();
+    QVector<glm::vec3> triangulation_points;
+    triangulation_points.append(create_super_tetra());
+    for(Atom atom : current_protein->m_atom_list){
+        triangulation_points.append(atom.m_position);
+    }
+
+    QVector<Tetra> tetra_list;
+    tetra_list.append(Tetra(0,1,2,3,&triangulation_points));
+
+    std::unordered_map<Triangle_face,int,Triangle_face_hash> face_map;
+    //for(auto atom : current_protein->m_atom_list){ //clamp function to first atom only for testing
+    for(int x = 4; x < triangulation_points.size(); x++){
+        qDebug() << x;
+        face_map.clear();
+        QList<int> tetra_for_deletion;
+        //mark tetra for deletion
+        for(int i = 0; i < tetra_list.length(); i++){
+            if (tetra_list[i].point_insinde(current_protein->m_atom_list[x].m_position)){
+                //point inside sphere
+                //add faces to mesh
+                for(auto face : tetra_list[i].get_faces()){
+                    face_map[face]++;
+                }
+                //qDebug() << "Punkt: " << current_protein->m_atom_list[x].m_position.x << " " << current_protein->m_atom_list[x].m_position.y << " " << current_protein->m_atom_list[x].m_position.z << "Jest w kuli";
+                tetra_for_deletion.append(i);
+            }
+        }
+        //delete tetra
+        std::sort(tetra_for_deletion.begin(), tetra_for_deletion.end(), std::greater<int>());
+
+        for(int i : tetra_for_deletion){
+            tetra_list.removeAt(i);
+        }
+
+        //create new tetra
+        for(auto face : face_map){
+            if(face.second == 1){
+                tetra_list.append(Tetra(face.first.id[0],
+                                        face.first.id[1],
+                                        face.first.id[2],
+                                        x,
+                                        &triangulation_points));
+            }
+        }
+    }
+    for(Tetra tetra : tetra_list){
+        qDebug() << "(" << tetra.a << " " << tetra.b << " " << tetra.c << " " << tetra.d << ")";
+        cores->add_instance(triangulation_points[tetra.a],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.b],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.c],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.d],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+
+        add_line(triangulation_points[tetra.a],triangulation_points[tetra.b],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.a],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.a],triangulation_points[tetra.c],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.b],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.b],triangulation_points[tetra.c],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.c],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
+    }
+    cores->updateGPU();
+    triangulation_lines->updateGPU();
+
 }
 
-Molecule_visualization_widget::Tetra Molecule_visualization_widget::create_super_tetra()
+QVector<glm::vec3> Molecule_visualization_widget::create_super_tetra()
 {
     glm::vec3 centroid(0,0,0);
     for(Atom atom: current_protein->m_atom_list){
@@ -385,36 +451,8 @@ Molecule_visualization_widget::Tetra Molecule_visualization_widget::create_super
     for(int i = 0; i < 4; ++i){
         tetra_verticies.append(centroid + unit_tetra[i] * R_tetra);
     }
-
-
-    cores->add_instance(centroid,glm::vec3(radius),glm::mat4(1.0),glm::vec3(1,1,1),1.0);
-    cores->add_instance(tetra_verticies[0],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(1,0,0),1.0);
-    cores->add_instance(tetra_verticies[1],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-    cores->add_instance(tetra_verticies[2],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,0,1),1.0);
-    cores->add_instance(tetra_verticies[3],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,1),1.0);
-    cores->updateGPU();
-
-    add_line(tetra_verticies[0],tetra_verticies[1],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[0],tetra_verticies[2],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[0],tetra_verticies[3],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[1],tetra_verticies[3],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[1],tetra_verticies[2],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[2],tetra_verticies[1],1.0,glm::vec3(0,1,0));
-    add_line(tetra_verticies[2],tetra_verticies[3],1.0,glm::vec3(0,1,0));
-    return Tetra(glm::vec3(0),glm::vec3(0),glm::vec3(0),glm::vec3(0));
-
+    return tetra_verticies;
 }
-
-void Molecule_visualization_widget::points_in_sphere()
-{
-
-}
-
-void Molecule_visualization_widget::get_faces()
-{
-
-}
-
 
 void Molecule_visualization_widget::paintGL()
 {
@@ -533,6 +571,7 @@ void Molecule_visualization_widget::initializeGL()
     add_line(glm::vec3(0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
     add_line(glm::vec3(0),glm::vec3(0,10,0),0.5,glm::vec3(0.0,1.0,0.0));
     add_line(glm::vec3(0),glm::vec3(0,0,10),0.5,glm::vec3(0.0,1.0,0.0));
+    triangulation_lines->updateGPU();
     // add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(0,0,0),0.5,glm::vec3(0.0,1.0,0.0));
     // add_line(glm::vec3(0.0,0.0,10.0),glm::vec3(10,0,0),0.5,glm::vec3(0.0,1.0,0.0));
     // add_line(glm::vec3(0.0,0.0,20.0),glm::vec3(0,0,10),0.5,glm::vec3(0.0,1.0,0.0));
