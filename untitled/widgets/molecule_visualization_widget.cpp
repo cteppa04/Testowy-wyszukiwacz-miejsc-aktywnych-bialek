@@ -9,6 +9,7 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QKeyEvent>
+#include <QStack>
 
 #include <classes/OpenGl/shaders/shader_object.h>
 
@@ -359,67 +360,94 @@ void Molecule_visualization_widget::draw_triangulation_lines()
 void Molecule_visualization_widget::create_deluay_triangulation()
 {
     QVector<glm::vec3> triangulation_points;
+    QVector<Tetra> tetra_list;
+    std::unordered_map<Triangle_face,QVector<Tetra*>,Triangle_face_hash> face_map;
+
+    //dodaj super tetra
     triangulation_points.append(create_super_tetra());
     for(Atom atom : current_protein->m_atom_list){
         triangulation_points.append(atom.m_position);
     }
-
-    QVector<Tetra> tetra_list;
+    //dodaj tetra do listy
     tetra_list.append(Tetra(0,1,2,3,&triangulation_points));
-
-    std::unordered_map<Triangle_face,int,Triangle_face_hash> face_map;
-    //for(auto atom : current_protein->m_atom_list){ //clamp function to first atom only for testing
-    for(int x = 4; x < triangulation_points.size(); x++){
-        qDebug() << x;
-        face_map.clear();
-        QList<int> tetra_for_deletion;
-        //mark tetra for deletion
-        for(int i = 0; i < tetra_list.length(); i++){
-            if (tetra_list[i].point_insinde(current_protein->m_atom_list[x].m_position)){
-                //point inside sphere
-                //add faces to mesh
-                for(auto face : tetra_list[i].get_faces()){
-                    face_map[face]++;
-                }
-                //qDebug() << "Punkt: " << current_protein->m_atom_list[x].m_position.x << " " << current_protein->m_atom_list[x].m_position.y << " " << current_protein->m_atom_list[x].m_position.z << "Jest w kuli";
-                tetra_for_deletion.append(i);
-            }
-        }
-        //delete tetra
-        std::sort(tetra_for_deletion.begin(), tetra_for_deletion.end(), std::greater<int>());
-
-        for(int i : tetra_for_deletion){
-            tetra_list.removeAt(i);
-        }
-
-        //create new tetra
-        for(auto face : face_map){
-            if(face.second == 1){
-                tetra_list.append(Tetra(face.first.id[0],
-                                        face.first.id[1],
-                                        face.first.id[2],
-                                        x,
-                                        &triangulation_points));
-            }
-        }
+    //dodaj jego sciany
+    for(auto& face : tetra_list[0].get_faces()){
+        face_map[face].append(&tetra_list[0]);
     }
-    for(Tetra tetra : tetra_list){
-        qDebug() << "(" << tetra.a << " " << tetra.b << " " << tetra.c << " " << tetra.d << ")";
-        cores->add_instance(triangulation_points[tetra.a],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.b],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.c],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.d],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
 
-        add_line(triangulation_points[tetra.a],triangulation_points[tetra.b],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.a],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.a],triangulation_points[tetra.c],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.b],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.b],triangulation_points[tetra.c],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.c],triangulation_points[tetra.d],0.25,glm::vec3(0,1,0));
+    uint start;
+    for(int x = 4; x < triangulation_points.size(); x++){
+        //dla każdego punktu
+        qDebug() << x;
+
+        start = tetra_list.size() - 1;
+        glm::vec3 point = triangulation_points[x];
+
+        //find first invalid tetra by walking
+        while(!tetra_list[start].point_insinde(triangulation_points[x])){
+            //tetra doesn't contain the point
+            auto faces = tetra_list[start].get_faces();
+            for(int i = 0; i < 4; i++){
+                //for each face
+                if(glm::dot(tetra_list[start].get_face_normal(faces[i]),point - triangulation_points[faces[i].id[0]]) > 0){
+                    //point "outside" face, move to that neighbour if its not null
+                    if(tetra_list[start].neighbours[i]){
+                        start = tetra_list[start].neighbours[i];
+                        break;
+                    }
+                }
+
+            }
+        }
+
+        //tetra containts the point
+        //fill neighbours till full cavity filled
+        QStack<uint> stack;
+        QSet<uint> visited;
+        QList<uint> cavity;
+        QSet<uint> affected;
+
+        stack.push(start);
+
+        while(!stack.isEmpty()){
+            uint tetra = stack.pop();
+
+            if(visited.contains(tetra)) continue;//continue if already visited
+
+            visited.insert(tetra);
+
+            if(tetra_list[tetra].point_insinde(point)){
+                //invalid tetra
+                cavity.append(tetra);
+                for(int i = 0; i < 4; i++){
+                    //if neighbour exists and not visited add to stack
+                    if(!tetra_list[tetra].neighbours[i] || visited.contains(tetra_list[tetra].neighbours[i])) continue;
+                    stack.push(tetra_list[tetra].neighbours[i]);
+                }
+            }
+        }
+
+        //delete cavity tetra
+
+
+    }
+
+    for(Tetra tetra : tetra_list){
+        qDebug() << "(" << tetra.verticies[0] << " " << tetra.verticies[1] << " " << tetra.verticies[2] << " " << tetra.verticies[3] << ")";
+        cores->add_instance(triangulation_points[tetra.verticies[0]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[1]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[2]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[3]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[1]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[2]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[2]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[2]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
     }
     cores->updateGPU();
     triangulation_lines->updateGPU();
-
 }
 
 QVector<glm::vec3> Molecule_visualization_widget::create_super_tetra()
