@@ -359,58 +359,72 @@ void Molecule_visualization_widget::draw_triangulation_lines()
 
 void Molecule_visualization_widget::create_deluay_triangulation()
 {
+    const int EMPTY_NEIGHBOUR = -1;
+    const int RECONNECT_NEIGHBOUR = -2;
     QVector<glm::vec3> triangulation_points;
     QVector<Tetra> tetra_list;
-    std::unordered_map<Triangle_face,QVector<Tetra*>,Triangle_face_hash> face_map;
+    std::unordered_map<Triangle_face,QList<int>,Triangle_face_hash> face_map;
+    QVector<int>dead_tetra_indexes;
 
     //dodaj super tetra
     triangulation_points.append(create_super_tetra());
     for(Atom atom : current_protein->m_atom_list){
         triangulation_points.append(atom.m_position);
     }
+
     //dodaj tetra do listy
     tetra_list.append(Tetra(0,1,2,3,&triangulation_points));
-    //dodaj jego sciany
-    for(auto& face : tetra_list[0].get_faces()){
-        face_map[face].append(&tetra_list[0]);
+    //dodaj sasiadow
+    for(int i = 0; i < 4; i++){
+        tetra_list[0].neighbours[i].index = EMPTY_NEIGHBOUR;
     }
 
-    uint start;
+    int start;
     for(int x = 4; x < triangulation_points.size(); x++){
         //dla każdego punktu
         qDebug() << x;
+        //qDebug() << "point: " << triangulation_points[x].x << " " << triangulation_points[x].y << " " << triangulation_points[x].z << " ";
 
         start = tetra_list.size() - 1;
         glm::vec3 point = triangulation_points[x];
-
+        // qDebug() << tetra_list[start].point_insinde(point);
+        // int bac = 0;
+        // for(Tetra t :tetra_list){
+        //     if(!t.alive) continue;
+        //     qDebug() << bac;
+        //     bac++;
+        //     qDebug() << "A: " << triangulation_points[t.verticies[0]].x << " " << triangulation_points[t.verticies[0]].y << " " << triangulation_points[t.verticies[0]].z;
+        //     qDebug() << "B: " << triangulation_points[t.verticies[1]].x << " " << triangulation_points[t.verticies[1]].y << " " << triangulation_points[t.verticies[1]].z;
+        //     qDebug() << "C: " << triangulation_points[t.verticies[2]].x << " " << triangulation_points[t.verticies[2]].y << " " << triangulation_points[t.verticies[2]].z;
+        //     qDebug() << "D: " << triangulation_points[t.verticies[3]].x << " " << triangulation_points[t.verticies[3]].y << " " << triangulation_points[t.verticies[3]].z;
+        // }
+        //tetra doesn't contain the point
         //find first invalid tetra by walking
-        while(!tetra_list[start].point_insinde(triangulation_points[x])){
-            //tetra doesn't contain the point
-            auto faces = tetra_list[start].get_faces();
+        while(!tetra_list[start].point_insinde(point)){
+            auto neighbours = tetra_list[start].neighbours;
+            int smallest_index;
+            float smallest_distance = MAXFLOAT;
             for(int i = 0; i < 4; i++){
-                //for each face
-                if(glm::dot(tetra_list[start].get_face_normal(faces[i]),point - triangulation_points[faces[i].id[0]]) > 0){
-                    //point "outside" face, move to that neighbour if its not null
-                    if(tetra_list[start].neighbours[i]){
-                        start = tetra_list[start].neighbours[i];
-                        break;
-                    }
+                if(neighbours[i].index == EMPTY_NEIGHBOUR || neighbours[i].index == RECONNECT_NEIGHBOUR) continue;
+                float distance = glm::distance(point,tetra_list[neighbours[i].index].circ_sphere_center);
+                if(smallest_distance > distance){
+                    smallest_distance = distance;
+                    smallest_index = neighbours[i].index;
                 }
-
             }
+            start = smallest_index;
         }
 
         //tetra containts the point
         //fill neighbours till full cavity filled
-        QStack<uint> stack;
-        QSet<uint> visited;
-        QList<uint> cavity;
-        QSet<uint> affected;
+        QStack<int> stack;
+        QSet<int> visited;
+        QList<int> cavity;
 
         stack.push(start);
 
         while(!stack.isEmpty()){
-            uint tetra = stack.pop();
+            int tetra = stack.pop();
 
             if(visited.contains(tetra)) continue;//continue if already visited
 
@@ -421,30 +435,134 @@ void Molecule_visualization_widget::create_deluay_triangulation()
                 cavity.append(tetra);
                 for(int i = 0; i < 4; i++){
                     //if neighbour exists and not visited add to stack
-                    if(!tetra_list[tetra].neighbours[i] || visited.contains(tetra_list[tetra].neighbours[i])) continue;
-                    stack.push(tetra_list[tetra].neighbours[i]);
+                    if(tetra_list[tetra].neighbours[i].index == EMPTY_NEIGHBOUR ||
+                        visited.contains(tetra_list[tetra].neighbours[i].index)) continue;
+                    stack.push(tetra_list[tetra].neighbours[i].index);
                 }
             }
         }
+        //set tetra as dead
+        //find boundary faces
+        //delete connections to dead tetra
+        //save affected tetra
+        QSet<int> affected;
+        face_map.clear();
+        QVector<Triangle_face> boundary_faces;
+        for(int t : cavity){
+            //set tetra as dead
+            tetra_list[t].alive = false;
+            dead_tetra_indexes.append(t);
+            //find boundary faces
+            //add face to face map
+            auto cavity_faces = tetra_list[t].get_faces();
+            for(auto face : cavity_faces){
+                face_map[face].append(t);
+            }
+            for(int i = 0; i < 4; i++){
+                //for each neighbour of the dead tetra sever the connection
+                int neight = tetra_list[t].neighbours[i].index;
+                if(neight == EMPTY_NEIGHBOUR || neight == RECONNECT_NEIGHBOUR){
+                    continue;
+                }
+                for(int j = 0; j < 4; j++){
+                    //for each neihgbour of connected neighbour to dead tetra
+                    //delete connections to dead tetra
 
-        //delete cavity tetra
+                    if(tetra_list[neight].neighbours[j].index == t){
+                        tetra_list[neight].neighbours[j].index = RECONNECT_NEIGHBOUR;
+                    }
 
+                    //save affected tetra
+                    if(!cavity.contains(neight)){
+                        affected.insert(neight);
+                    }
+                }
+            }
+        }
+        //find boundary faces
+        //fill boundary faces
+        for (const auto &pair : face_map) {
+            if (pair.second.size() == 1) {
+                boundary_faces.append(pair.first);
+            }
+        }
 
+        //create new tetra
+        QSet<int> reconfiguration_tetra = affected;
+        QList<Tetra> new_tetra;
+        for(const Triangle_face &face : boundary_faces){
+            Tetra t(face.id[0],face.id[1],face.id[2],x,&triangulation_points);
+            new_tetra.append(t);
+            tetra_list.append(t);
+            reconfiguration_tetra.insert(tetra_list.size() - 1);
+        }
+
+        //retriangulate cavity and affected
+        face_map.clear();
+        //add all faces that need reconfiguration
+        for(auto tetra : reconfiguration_tetra){
+            auto faces = tetra_list[tetra].get_faces();
+            for(auto face : faces){
+                face_map[face].append(tetra);
+            }
+        }
+        //for each face
+        for(auto const &face : face_map){
+            if(face.second.size() != 2) continue;
+
+            //for two connection tetra
+            int a_index = face.second[0];
+            int b_index = face.second[1];
+
+            Tetra* a = &tetra_list[a_index];
+            Tetra* b = &tetra_list[b_index];
+
+            //skip if already connected
+            bool alreadyNeighbours = false;
+            for (int i = 0; i < 4; i++) {
+                if (a->neighbours[i].index == b_index) {
+                    alreadyNeighbours = true;
+                    break;
+                }
+            }
+            if (alreadyNeighbours) continue;
+
+            int slot_a = a->find_reconnect_neighbour_slot();
+            int slot_b = b->find_reconnect_neighbour_slot();
+            //fill tetra a
+            a->neighbours[slot_a].index = b_index;
+            a->neighbours[slot_a].face = face.first;
+            a->neighbours[slot_a].normal = a->get_face_normal(face.first);
+            //fill tetra b
+            b->neighbours[slot_b].index = a_index;
+            b->neighbours[slot_b].face = face.first;
+            b->neighbours[slot_b].normal = a->get_face_normal(face.first);
+        }
+
+        //convert hanging faces to empty neighbours
+        for(auto t : reconfiguration_tetra){
+            auto* tetra = &tetra_list[t];
+            for(int i = 0; i < 4; i++){
+                if (tetra->neighbours[i].index == -2) {
+                    tetra->neighbours[i].index = -1;
+                }
+            }
+        }
     }
 
     for(Tetra tetra : tetra_list){
         qDebug() << "(" << tetra.verticies[0] << " " << tetra.verticies[1] << " " << tetra.verticies[2] << " " << tetra.verticies[3] << ")";
-        cores->add_instance(triangulation_points[tetra.verticies[0]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.verticies[1]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.verticies[2]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
-        cores->add_instance(triangulation_points[tetra.verticies[3]],glm::vec3(2.0),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[0]],glm::vec3(0.1),glm::mat4(1.0),glm::vec3(1,0,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[1]],glm::vec3(0.1),glm::mat4(1.0),glm::vec3(0,1,0),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[2]],glm::vec3(0.1),glm::mat4(1.0),glm::vec3(0,0,1),1.0);
+        cores->add_instance(triangulation_points[tetra.verticies[3]],glm::vec3(0.1),glm::mat4(1.0),glm::vec3(1,1,0),1.0);
 
-        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[1]],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[2]],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[2]],0.25,glm::vec3(0,1,0));
-        add_line(triangulation_points[tetra.verticies[2]],triangulation_points[tetra.verticies[3]],0.25,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[3]],0.01,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[1]],0.01,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[0]],triangulation_points[tetra.verticies[2]],0.01,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[3]],0.01,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[1]],triangulation_points[tetra.verticies[2]],0.01,glm::vec3(0,1,0));
+        add_line(triangulation_points[tetra.verticies[2]],triangulation_points[tetra.verticies[3]],0.01,glm::vec3(0,1,0));
     }
     cores->updateGPU();
     triangulation_lines->updateGPU();

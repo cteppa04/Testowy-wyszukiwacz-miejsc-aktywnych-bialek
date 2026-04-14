@@ -3,14 +3,14 @@
 #include <glm/glm.hpp>
 
 using namespace glm;
-Tetra::Tetra(const uint a, const uint b, const uint c, const uint d, QVector<glm::vec3> *bound_list)
+Tetra::Tetra(const int a, const int b, const int c, const int d, QVector<glm::vec3> *bound_list)
     : bound_list(bound_list){
 
     verticies.append(a);
     verticies.append(b);
     verticies.append(c);
     verticies.append(d);
-
+    alive = true;
     calculate_circum_sphere();
 }
 
@@ -46,10 +46,10 @@ bool Tetra::point_insinde(glm::vec3 point)
 {
     vec3 diff = point - circ_sphere_center;
     float dist2 = dot(diff, diff);
-    return dist2 <= circ_sphere_radius * circ_sphere_radius + 1e-6f;
+    return dist2 <= circ_sphere_radius * circ_sphere_radius;
 }
 
-glm::vec3 Tetra::get_face_normal(Triangle_face &face)
+glm::vec3 Tetra::get_face_normal(const Triangle_face &face)
 {
     auto& list = *bound_list;
     glm::vec3* A = &list[face.id[0]];
@@ -95,4 +95,14 @@ QVector<Triangle_face> Tetra::get_faces()
     faces.append(Triangle_face(d,a,c));
     faces.append(Triangle_face(a,b,d));
     return faces;
+}
+
+int Tetra::find_reconnect_neighbour_slot()
+{
+    for (int i = 0; i < 4; i++) {
+        if (neighbours[i].index == -2) { //RECONNECT
+            return i;
+        }
+    }
+    return -1;
 }
